@@ -52,6 +52,65 @@ function emptyVitrine(): VitrineSection {
   return { type: "vitrine", category_id: "", title: "", limit: 8 }
 }
 
+/* ===== IMAGE UPLOAD COMPONENT ===== */
+function ImageUploadField({ label, value, onChange }: { label: string; value: string; onChange: (url: string) => void }) {
+  const [uploading, setUploading] = useState(false)
+
+  const handleUpload = async (file: File) => {
+    setUploading(true)
+    try {
+      const token = await getToken()
+      const formData = new FormData()
+      formData.append("file", file)
+      const res = await fetch(`${API}/admin/uploads`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      })
+      const data = await res.json()
+      if (data.files?.[0]?.url) {
+        onChange(`http://localhost:4000${data.files[0].url}`)
+      }
+    } catch (err) {
+      console.error("Upload error:", err)
+    }
+    setUploading(false)
+  }
+
+  return (
+    <div>
+      <label className="block text-xs font-semibold text-zinc-600 mb-1">{label}</label>
+      {value && (
+        <div className="mb-2 border rounded-lg overflow-hidden bg-zinc-50">
+          <img src={value} alt={label} className="w-full h-32 object-cover" />
+        </div>
+      )}
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="URL da imagem ou faça upload"
+          className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <label className={`px-3 py-2 rounded-lg text-sm font-medium cursor-pointer ${uploading ? "bg-zinc-200 text-zinc-500" : "bg-blue-600 text-white hover:bg-blue-700"}`}>
+          {uploading ? "..." : "Upload"}
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            disabled={uploading}
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) handleUpload(file)
+            }}
+          />
+        </label>
+      </div>
+    </div>
+  )
+}
+
 /* ===== PAGINA PRINCIPAL ===== */
 export default function HomeLayoutPage() {
   const [sections, setSections] = useState<Section[]>([])
@@ -193,25 +252,16 @@ export default function HomeLayoutPage() {
               {/* CAMPOS DO BANNER */}
               {section.type === "banner" && (
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-semibold text-zinc-600 mb-1">Imagem Mobile (URL)</label>
-                    <input
-                      type="text"
-                      value={(section as BannerSection).image_mobile}
-                      onChange={(e) => updateSection(idx, "image_mobile", e.target.value)}
-                      placeholder="https://..."
-                      className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-zinc-600 mb-1">Imagem Desktop (URL)</label>
-                    <input
-                      type="text"
-                      value={(section as BannerSection).image_desktop}
-                      onChange={(e) => updateSection(idx, "image_desktop", e.target.value)}
-                      placeholder="https://..."
-                      className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                  <ImageUploadField
+                    label="Imagem Mobile (4:5)"
+                    value={(section as BannerSection).image_mobile}
+                    onChange={(url) => updateSection(idx, "image_mobile", url)}
+                  />
+                  <ImageUploadField
+                    label="Imagem Desktop (16:9)"
+                    value={(section as BannerSection).image_desktop}
+                    onChange={(url) => updateSection(idx, "image_desktop", url)}
+                  />
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-zinc-600 mb-1">Link</label>
