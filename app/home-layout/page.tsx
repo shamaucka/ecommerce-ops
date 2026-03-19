@@ -4,30 +4,42 @@ import { useState, useEffect, useCallback } from "react"
 
 const API = "http://localhost:4000/api"
 
-/* ===== AUTH HELPER ===== */
-let _tokenCache: { token: string; ts: number } | null = null
+let _tc: { token: string; ts: number } | null = null
 async function getToken() {
-  if (_tokenCache && Date.now() - _tokenCache.ts < 300_000) return _tokenCache.token
-  const res = await fetch(`${API}/auth/user/emailpass`, {
+  if (_tc && Date.now() - _tc.ts < 300000) return _tc.token
+  const res = await fetch(API + "/auth/user/emailpass", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email: "admin@sualoja.com.br", password: "admin123" }),
   })
-  const { token } = await res.json()
-  _tokenCache = { token, ts: Date.now() }
-  return token
+  const d = await res.json()
+  _tc = { token: d.token, ts: Date.now() }
+  return d.token
 }
-async function api(path: string, options?: RequestInit) {
+async function apiFetch(path: string, opts?: RequestInit) {
   const token = await getToken()
-  const res = await fetch(`${API}${path}`, {
-    ...options,
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, ...options?.headers },
+  const res = await fetch(API + path, {
+    ...opts,
+    headers: { "Content-Type": "application/json", Authorization: "Bearer " + token, ...opts?.headers },
   })
   return res.json()
 }
 
-/* ===== TIPOS ===== */
-interface BannerSection {
+async function uploadFile(file: File): Promise<string> {
+  const token = await getToken()
+  const fd = new FormData()
+  fd.append("file", file)
+  const res = await fetch(API + "/admin/uploads", {
+    method: "POST",
+    headers: { Authorization: "Bearer " + token },
+    body: fd,
+  })
+  const data = await res.json()
+  if (data.files && data.files[0]) return "http://localhost:4000" + data.files[0].url
+  return ""
+}
+
+interface BannerData {
   type: "banner"
   image_mobile: string
   image_desktop: string
@@ -35,101 +47,27 @@ interface BannerSection {
   alt: string
 }
 
-interface VitrineSection {
+interface VitrineData {
   type: "vitrine"
-  category_id: string
   title: string
   limit: number
+  category_id: string
 }
 
-type Section = BannerSection | VitrineSection
+type SectionData = BannerData | VitrineData
 
-function emptyBanner(): BannerSection {
-  return { type: "banner", image_mobile: "", image_desktop: "", link: "", alt: "" }
-}
-
-function emptyVitrine(): VitrineSection {
-  return { type: "vitrine", category_id: "", title: "", limit: 8 }
-}
-
-/* ===== IMAGE UPLOAD COMPONENT ===== */
-function ImageUploadField({ label, value, onChange }: { label: string; value: string; onChange: (url: string) => void }) {
-  const [uploading, setUploading] = useState(false)
-
-  const handleUpload = async (file: File) => {
-    setUploading(true)
-    try {
-      const token = await getToken()
-      const formData = new FormData()
-      formData.append("file", file)
-      const res = await fetch(`${API}/admin/uploads`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      })
-      const data = await res.json()
-      if (data.files?.[0]?.url) {
-        onChange(`http://localhost:4000${data.files[0].url}`)
-      }
-    } catch (err) {
-      console.error("Upload error:", err)
-    }
-    setUploading(false)
-  }
-
-  return (
-    <div>
-      <label className="block text-xs font-semibold text-zinc-600 mb-1">{label}</label>
-      {value && (
-        <div className="mb-2 border rounded-lg overflow-hidden bg-zinc-50">
-          <img src={value} alt={label} className="w-full h-32 object-cover" />
-        </div>
-      )}
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="URL da imagem ou faça upload"
-          className="flex-1 px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <label className={`px-3 py-2 rounded-lg text-sm font-medium cursor-pointer ${uploading ? "bg-zinc-200 text-zinc-500" : "bg-blue-600 text-white hover:bg-blue-700"}`}>
-          {uploading ? "..." : "Upload"}
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            disabled={uploading}
-            onChange={(e) => {
-              const file = e.target.files?.[0]
-              if (file) handleUpload(file)
-            }}
-          />
-        </label>
-      </div>
-    </div>
-  )
-}
-
-/* ===== PAGINA PRINCIPAL ===== */
 export default function HomeLayoutPage() {
-  const [sections, setSections] = useState<Section[]>([])
-  const [categories, setCategories] = useState<any[]>([])
+  const [sections, setSections] = useState<SectionData[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState("")
-  const [addMenuOpen, setAddMenuOpen] = useState(false)
 
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      const [layoutData, catData] = await Promise.all([
-        api("/admin/home-layout"),
-        api("/admin/categories?action=list"),
-      ])
-      setSections(layoutData.sections || [])
-      setCategories(catData.categories || [])
-    } catch (e: any) {
+      const data = await apiFetch("/admin/home-layout")
+      setSections(data.layout?.sections || data.sections || [])
+    } catch (e) {
       console.error(e)
     }
     setLoading(false)
@@ -137,51 +75,44 @@ export default function HomeLayoutPage() {
 
   useEffect(() => { loadData() }, [loadData])
 
-  const showMsg = (msg: string, duration = 4000) => {
-    setMessage(msg)
-    setTimeout(() => setMessage(""), duration)
-  }
-
-  const addSection = (type: "banner" | "vitrine") => {
-    if (type === "banner") {
-      setSections([...sections, emptyBanner()])
-    } else {
-      setSections([...sections, emptyVitrine()])
-    }
-    setAddMenuOpen(false)
-  }
-
-  const removeSection = (idx: number) => {
-    if (!confirm("Remover esta secao?")) return
-    setSections(sections.filter((_, i) => i !== idx))
-  }
-
-  const moveSection = (idx: number, direction: "up" | "down") => {
-    const arr = [...sections]
-    const swapIdx = direction === "up" ? idx - 1 : idx + 1
-    if (swapIdx < 0 || swapIdx >= arr.length) return
-    ;[arr[idx], arr[swapIdx]] = [arr[swapIdx], arr[idx]]
-    setSections(arr)
-  }
-
-  const updateSection = (idx: number, field: string, value: any) => {
-    const arr = [...sections]
-    arr[idx] = { ...arr[idx], [field]: value } as Section
-    setSections(arr)
-  }
-
-  const saveLayout = async () => {
+  const save = async () => {
     setSaving(true)
     try {
-      await api("/admin/home-layout", {
-        method: "POST",
-        body: JSON.stringify({ action: "save", sections }),
-      })
-      showMsg("Layout salvo com sucesso!")
+      await apiFetch("/admin/home-layout", { method: "POST", body: JSON.stringify({ action: "save", sections }) })
+      setMessage("Layout salvo!")
+      setTimeout(() => setMessage(""), 3000)
     } catch (e: any) {
-      showMsg("Erro: " + e.message)
+      setMessage("Erro: " + e.message)
     }
     setSaving(false)
+  }
+
+  const add = (type: "banner" | "vitrine") => {
+    if (type === "banner") {
+      setSections([...sections, { type: "banner", image_mobile: "", image_desktop: "", link: "/quadros", alt: "Banner" }])
+    } else {
+      setSections([...sections, { type: "vitrine", title: "Mais Vendidos", limit: 8, category_id: "" }])
+    }
+  }
+
+  const remove = (i: number) => {
+    setSections(sections.filter((_, idx) => idx !== i))
+  }
+
+  const move = (i: number, dir: number) => {
+    const j = i + dir
+    if (j < 0 || j >= sections.length) return
+    const arr = [...sections]
+    const temp = arr[i]
+    arr[i] = arr[j]
+    arr[j] = temp
+    setSections(arr)
+  }
+
+  const update = (i: number, key: string, val: any) => {
+    const arr = [...sections]
+    arr[i] = { ...arr[i], [key]: val } as any
+    setSections(arr)
   }
 
   return (
@@ -189,188 +120,126 @@ export default function HomeLayoutPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold">Layout da Home</h2>
-          <p className="text-zinc-500 text-sm mt-1">Configure as secoes da pagina inicial</p>
+          <p className="text-zinc-500 text-sm mt-1">Arraste e configure as secoes da pagina inicial</p>
         </div>
         <div className="flex gap-3">
-          <button onClick={loadData} className="px-4 py-2 bg-zinc-200 rounded-lg text-sm font-medium hover:bg-zinc-300">Atualizar</button>
-          <button onClick={saveLayout} disabled={saving} className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+          <button onClick={() => add("banner")} className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700">+ Banner</button>
+          <button onClick={() => add("vitrine")} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">+ Vitrine</button>
+          <button onClick={save} disabled={saving} className="px-6 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50">
             {saving ? "Salvando..." : "Salvar Layout"}
           </button>
         </div>
       </div>
 
       {message && (
-        <div className={`mb-4 p-3 rounded-lg text-sm font-medium ${message.includes("Erro") ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"}`}>
-          {message}
-        </div>
+        <div className="mb-4 p-3 rounded-lg text-sm font-medium bg-green-50 text-green-700">{message}</div>
       )}
 
       {loading ? (
-        <div className="text-center py-12 text-zinc-400">Carregando layout...</div>
+        <div className="text-center py-12 text-zinc-400">Carregando...</div>
+      ) : sections.length === 0 ? (
+        <div className="text-center py-12 text-zinc-400">Nenhuma secao configurada. Adicione Banners e Vitrines acima.</div>
       ) : (
         <div className="space-y-4">
-          {sections.map((section, idx) => (
-            <div key={idx} className="bg-white rounded-xl shadow p-5">
-              {/* HEADER DA SECAO */}
+          {sections.map((sec, i) => (
+            <div key={i} className="bg-white rounded-xl shadow p-5">
               <div className="flex items-center justify-between mb-4 pb-3 border-b">
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold text-zinc-400 uppercase bg-zinc-100 px-2 py-1 rounded">
-                    {idx + 1}
-                  </span>
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    section.type === "banner" ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"
-                  }`}>
-                    {section.type === "banner" ? "Banner" : "Vitrine de Produtos"}
+                  <span className="text-xs font-bold text-zinc-400 bg-zinc-100 px-2 py-1 rounded">{i + 1}</span>
+                  <span className={sec.type === "banner" ? "px-2 py-1 rounded text-xs font-medium bg-orange-100 text-orange-700" : "px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700"}>
+                    {sec.type === "banner" ? "Banner" : "Vitrine de Produtos"}
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => moveSection(idx, "up")}
-                    disabled={idx === 0}
-                    className="px-2 py-1 bg-zinc-100 rounded text-xs hover:bg-zinc-200 disabled:opacity-30"
-                    title="Subir"
-                  >
-                    &#9650;
-                  </button>
-                  <button
-                    onClick={() => moveSection(idx, "down")}
-                    disabled={idx === sections.length - 1}
-                    className="px-2 py-1 bg-zinc-100 rounded text-xs hover:bg-zinc-200 disabled:opacity-30"
-                    title="Descer"
-                  >
-                    &#9660;
-                  </button>
-                  <button
-                    onClick={() => removeSection(idx)}
-                    className="px-2 py-1 bg-red-100 text-red-600 rounded text-xs hover:bg-red-200 ml-2"
-                  >
-                    Remover
-                  </button>
+                  <button onClick={() => move(i, -1)} disabled={i === 0} className="px-2 py-1 bg-zinc-100 rounded text-xs hover:bg-zinc-200 disabled:opacity-30">Up</button>
+                  <button onClick={() => move(i, 1)} disabled={i === sections.length - 1} className="px-2 py-1 bg-zinc-100 rounded text-xs hover:bg-zinc-200 disabled:opacity-30">Down</button>
+                  <button onClick={() => remove(i)} className="px-2 py-1 bg-red-100 text-red-600 rounded text-xs hover:bg-red-200 ml-2">Remover</button>
                 </div>
               </div>
 
-              {/* CAMPOS DO BANNER */}
-              {section.type === "banner" && (
-                <div className="grid grid-cols-2 gap-4">
-                  <ImageUploadField
-                    label="Imagem Mobile (4:5)"
-                    value={(section as BannerSection).image_mobile}
-                    onChange={(url) => updateSection(idx, "image_mobile", url)}
-                  />
-                  <ImageUploadField
-                    label="Imagem Desktop (16:9)"
-                    value={(section as BannerSection).image_desktop}
-                    onChange={(url) => updateSection(idx, "image_desktop", url)}
-                  />
+              {sec.type === "banner" ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <UploadField label="Imagem Mobile (4:5)" value={(sec as BannerData).image_mobile} onChange={(v) => update(i, "image_mobile", v)} />
+                    <UploadField label="Imagem Desktop (16:9)" value={(sec as BannerData).image_desktop} onChange={(v) => update(i, "image_desktop", v)} />
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-zinc-600 mb-1">Link</label>
-                    <input
-                      type="text"
-                      value={(section as BannerSection).link}
-                      onChange={(e) => updateSection(idx, "link", e.target.value)}
-                      placeholder="/promocoes ou https://..."
-                      className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-zinc-600 mb-1">Texto Alternativo (Alt)</label>
-                    <input
-                      type="text"
-                      value={(section as BannerSection).alt}
-                      onChange={(e) => updateSection(idx, "alt", e.target.value)}
-                      placeholder="Descricao do banner"
-                      className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-                  {/* Preview */}
-                  {(section as BannerSection).image_desktop && (
-                    <div className="col-span-2">
-                      <p className="text-xs text-zinc-400 mb-1">Preview Desktop:</p>
-                      <img
-                        src={(section as BannerSection).image_desktop}
-                        alt={(section as BannerSection).alt}
-                        className="w-full max-h-40 object-cover rounded-lg border"
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = "none" }}
-                      />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-xs font-semibold text-zinc-600 mb-1">Link</label>
+                      <input type="text" value={(sec as BannerData).link} onChange={(e) => update(i, "link", e.target.value)} placeholder="/quadros" className="w-full px-3 py-2 border rounded-lg text-sm" />
                     </div>
-                  )}
+                    <div>
+                      <label className="block text-xs font-semibold text-zinc-600 mb-1">Texto Alt</label>
+                      <input type="text" value={(sec as BannerData).alt} onChange={(e) => update(i, "alt", e.target.value)} placeholder="Banner promocional" className="w-full px-3 py-2 border rounded-lg text-sm" />
+                    </div>
+                  </div>
                 </div>
-              )}
-
-              {/* CAMPOS DA VITRINE */}
-              {section.type === "vitrine" && (
+              ) : (
                 <div className="grid grid-cols-3 gap-4">
-                  <div className="col-span-2">
+                  <div>
                     <label className="block text-xs font-semibold text-zinc-600 mb-1">Titulo da Vitrine</label>
-                    <input
-                      type="text"
-                      value={(section as VitrineSection).title}
-                      onChange={(e) => updateSection(idx, "title", e.target.value)}
-                      placeholder="Ex: Mais Vendidos"
-                      className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                    <input type="text" value={(sec as VitrineData).title} onChange={(e) => update(i, "title", e.target.value)} placeholder="Mais Vendidos" className="w-full px-3 py-2 border rounded-lg text-sm" />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-zinc-600 mb-1">Limite de Produtos</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="50"
-                      value={(section as VitrineSection).limit}
-                      onChange={(e) => updateSection(idx, "limit", Number(e.target.value))}
-                      className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
+                    <label className="block text-xs font-semibold text-zinc-600 mb-1">Quantidade de Produtos</label>
+                    <input type="number" value={(sec as VitrineData).limit} onChange={(e) => update(i, "limit", Number(e.target.value))} min={1} max={48} className="w-full px-3 py-2 border rounded-lg text-sm" />
                   </div>
-                  <div className="col-span-3">
-                    <label className="block text-xs font-semibold text-zinc-600 mb-1">Categoria</label>
-                    <select
-                      value={(section as VitrineSection).category_id}
-                      onChange={(e) => updateSection(idx, "category_id", e.target.value)}
-                      className="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Todas as categorias</option>
-                      {categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-600 mb-1">Ordenar por</label>
+                    <select value={(sec as VitrineData).category_id} onChange={(e) => update(i, "category_id", e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm bg-white">
+                      <option value="">Mais Vendidos</option>
+                      <option value="novidades">Novidades</option>
+                      <option value="menor-preco">Menor Preco</option>
+                      <option value="maior-preco">Maior Preco</option>
                     </select>
                   </div>
                 </div>
               )}
             </div>
           ))}
-
-          {/* BOTAO ADICIONAR */}
-          <div className="relative">
-            <button
-              onClick={() => setAddMenuOpen(!addMenuOpen)}
-              className="w-full py-4 border-2 border-dashed border-zinc-300 rounded-xl text-zinc-400 hover:border-blue-400 hover:text-blue-500 transition-colors text-sm font-medium"
-            >
-              + Adicionar Secao
-            </button>
-            {addMenuOpen && (
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white rounded-xl shadow-lg border p-2 z-10 flex gap-2">
-                <button
-                  onClick={() => addSection("banner")}
-                  className="px-4 py-3 rounded-lg hover:bg-orange-50 text-sm font-medium flex flex-col items-center gap-1 min-w-[120px]"
-                >
-                  <span className="text-orange-600 text-lg">&#9881;</span>
-                  <span>Banner</span>
-                </button>
-                <button
-                  onClick={() => addSection("vitrine")}
-                  className="px-4 py-3 rounded-lg hover:bg-blue-50 text-sm font-medium flex flex-col items-center gap-1 min-w-[120px]"
-                >
-                  <span className="text-blue-600 text-lg">&#9733;</span>
-                  <span>Vitrine de Produtos</span>
-                </button>
-              </div>
-            )}
-          </div>
-
-          {sections.length === 0 && !loading && (
-            <div className="text-center py-8 text-zinc-400">Nenhuma secao configurada. Clique em &quot;Adicionar Secao&quot; para comecar.</div>
-          )}
         </div>
       )}
+    </div>
+  )
+}
+
+function UploadField(props: { label: string; value: string; onChange: (v: string) => void }) {
+  const [busy, setBusy] = useState(false)
+
+  return (
+    <div>
+      <p className="text-xs font-semibold text-zinc-600 mb-1">{props.label}</p>
+      {props.value ? (
+        <div className="mb-2 border rounded-lg overflow-hidden bg-zinc-50">
+          <img src={props.value} alt="" className="w-full h-32 object-cover" />
+        </div>
+      ) : null}
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={props.value}
+          onChange={(e) => props.onChange(e.target.value)}
+          placeholder="URL da imagem"
+          className="flex-1 px-3 py-2 border rounded-lg text-sm"
+        />
+        <label className={busy ? "px-3 py-2 rounded-lg text-sm font-medium bg-zinc-200 text-zinc-500 cursor-wait" : "px-3 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"}>
+          {busy ? "..." : "Upload"}
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            disabled={busy}
+            onChange={async (e) => {
+              const f = e.target.files?.[0]
+              if (!f) return
+              setBusy(true)
+              const url = await uploadFile(f)
+              if (url) props.onChange(url)
+              setBusy(false)
+            }}
+          />
+        </label>
+      </div>
     </div>
   )
 }
