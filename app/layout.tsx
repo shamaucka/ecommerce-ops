@@ -148,6 +148,7 @@ const navGroups: NavGroup[] = [
     items: [
       { href: "/fiscal-loja", label: "Fiscal Loja", Icon: IconFiscal },
       { href: "/estoque", label: "Estoque", Icon: IconEstoque },
+      { href: "/frete", label: "Frete", Icon: IconDespacho },
     ],
   },
   {
