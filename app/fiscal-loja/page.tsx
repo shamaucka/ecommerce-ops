@@ -210,17 +210,12 @@ export default function FiscalLojaPage() {
           </div>
         </section>
 
-        {/* NF-e CONFIG */}
+        {/* NATUREZA OPERACAO */}
         <section className="bg-white rounded-xl shadow p-6">
-          <h3 className="text-lg font-bold mb-4 pb-2 border-b">Configuracao NF-e</h3>
-          <div className="grid grid-cols-4 gap-4">
-            <Field label="Serie NF-e" field="serie_nfe" placeholder="1" />
-            <Sel label="Ambiente" field="ambiente" options={[
-              { value: "homologacao", label: "Homologacao (testes)" },
-              { value: "producao", label: "Producao" },
-            ]} />
-            <Field label="Natureza da Operacao" field="natureza_operacao" placeholder="Venda de mercadoria" span={2} />
-            <div className="col-span-4">
+          <h3 className="text-lg font-bold mb-4 pb-2 border-b">Natureza da Operacao</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Natureza da Operacao" field="natureza_operacao" placeholder="Venda de mercadoria" />
+            <div>
               <label className="block text-xs font-semibold text-zinc-600 mb-1">Informacao Complementar (rodape NF-e)</label>
               <textarea
                 value={config.info_complementar ?? ""}
@@ -229,6 +224,103 @@ export default function FiscalLojaPage() {
                 rows={3}
                 placeholder="Documento emitido por ME ou EPP optante pelo Simples Nacional..."
               />
+            </div>
+          </div>
+        </section>
+        {/* CERTIFICADO DIGITAL A1 */}
+        <section className="bg-white rounded-xl shadow p-6">
+          <h3 className="text-lg font-bold mb-4 pb-2 border-b">Certificado Digital A1</h3>
+          <div className="space-y-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-700">
+              <p className="font-bold mb-1">Como funciona:</p>
+              <p>O certificado A1 (.pfx) e usado para assinar as notas fiscais e comunicar com a SEFAZ. Custo: ~R$150/ano.</p>
+              <p className="mt-1">Compre em: <a href="https://serasa.certificadodigital.com.br" target="_blank" className="underline">Serasa</a> ou <a href="https://www.certisign.com.br" target="_blank" className="underline">Certisign</a></p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-zinc-600 mb-1">Arquivo do Certificado (.pfx)</label>
+                <input
+                  type="file"
+                  accept=".pfx,.p12"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    // Upload via API
+                    const formData = new FormData()
+                    formData.append("file", file)
+                    try {
+                      const loginRes = await fetch(`${API}/auth/user/emailpass`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ email: "admin@sualoja.com.br", password: "admin123" }),
+                      })
+                      const { token } = await loginRes.json()
+                      const res = await fetch(`${API}/admin/uploads`, {
+                        method: "POST",
+                        headers: { Authorization: `Bearer ${token}` },
+                        body: formData,
+                      })
+                      const data = await res.json()
+                      if (data.files?.[0]?.url) {
+                        u("certificado_path", data.files[0].url)
+                        setMsg("Certificado enviado com sucesso!")
+                      }
+                    } catch (err) {
+                      setMsg("Erro ao enviar certificado")
+                    }
+                  }}
+                  className="w-full px-3 py-2 border rounded-lg text-sm bg-white file:mr-4 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                {config.certificado_path && (
+                  <p className="text-xs text-green-600 mt-1">Certificado carregado: {config.certificado_path}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-zinc-600 mb-1">Senha do Certificado</label>
+                <input
+                  type="password"
+                  value={config.certificado_senha ?? ""}
+                  onChange={(e) => u("certificado_senha", e.target.value)}
+                  placeholder="Senha do .pfx"
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <Field label="Serie NF-e" field="serie_nfe" placeholder="1" />
+              <Sel label="Ambiente" field="ambiente" options={[
+                { value: "homologacao", label: "Homologacao (testes)" },
+                { value: "producao", label: "Producao" },
+              ]} />
+              <div className="flex items-end">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const loginRes = await fetch(`${API}/auth/user/emailpass`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ email: "admin@sualoja.com.br", password: "admin123" }),
+                      })
+                      const { token } = await loginRes.json()
+                      const res = await fetch(`${API}/admin/nfe`, { headers: { Authorization: `Bearer ${token}` } })
+                      const data = await res.json()
+                      if (data.sefaz?.online) {
+                        setMsg("SEFAZ Online! Status: " + data.sefaz.motivo)
+                      } else {
+                        setMsg("SEFAZ: " + (data.sefaz?.error || data.error || "Offline"))
+                      }
+                    } catch (err) {
+                      setMsg("Erro ao verificar SEFAZ")
+                    }
+                  }}
+                  className="w-full px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
+                >
+                  Testar Conexao SEFAZ
+                </button>
+              </div>
             </div>
           </div>
         </section>
