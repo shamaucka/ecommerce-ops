@@ -26,6 +26,20 @@ async function api(path: string, options?: RequestInit) {
   return res.json()
 }
 
+async function uploadFile(file: File): Promise<string> {
+  const token = await getToken()
+  const fd = new FormData()
+  fd.append("file", file)
+  const res = await fetch(`${API}/admin/uploads`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: fd,
+  })
+  const data = await res.json()
+  if (data.files && data.files[0]) return "http://localhost:4000" + data.files[0].url
+  return ""
+}
+
 /* ===== CATEGORIAS PADRAO ===== */
 const CATEGORIAS = [
   "Quadros Decorativos",
@@ -118,6 +132,24 @@ export default function ProdutosPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState("")
+  const [editThumbnail, setEditThumbnail] = useState("")
+  const [productImages, setProductImages] = useState<string[]>([])
+  const [uploadingImage, setUploadingImage] = useState(false)
+
+  const handleAddImage = async (file: File) => {
+    setUploadingImage(true)
+    try {
+      const url = await uploadFile(file)
+      if (url) setProductImages((prev) => [...prev, url])
+    } catch (e) {
+      console.error("Erro no upload:", e)
+    }
+    setUploadingImage(false)
+  }
+
+  const handleRemoveImage = (idx: number) => {
+    setProductImages((prev) => prev.filter((_, i) => i !== idx))
+  }
 
   const loadProducts = useCallback(async () => {
     setLoading(true)
@@ -141,6 +173,7 @@ export default function ProdutosPage() {
   const openCreate = () => {
     setForm(emptyForm)
     setEditingId(null)
+    setProductImages([])
     setMode("create")
     setMessage("")
   }
@@ -174,6 +207,10 @@ export default function ProdutosPage() {
       seo_description: product.metadata?.seo_description || "",
     })
     setEditingId(product.id)
+    setEditThumbnail(product.thumbnail || product.images?.[0]?.url || "")
+    const imgs = (product.images || []).map((img: any) => img.url?.startsWith("http") ? img.url : "http://localhost:4000" + img.url).filter(Boolean)
+    if (!imgs.length && product.thumbnail) imgs.push(product.thumbnail.startsWith("http") ? product.thumbnail : "http://localhost:4000" + product.thumbnail)
+    setProductImages(imgs)
     setMode("edit")
     setMessage("")
   }
@@ -207,6 +244,7 @@ export default function ProdutosPage() {
       seo_description: product.metadata?.seo_description || "",
     })
     setEditingId(null)
+    setProductImages([])
     setMode("create")
     setMessage("")
   }
@@ -227,6 +265,8 @@ export default function ProdutosPage() {
 
       const priceBrlCents = form.price_brl ? Math.round(Number(form.price_brl) * 100) : 0
 
+      const thumbUrl = productImages[0] || undefined
+
       if (editingId) {
         // EDITAR
         await api(`/admin/products/${editingId}`, {
@@ -234,6 +274,7 @@ export default function ProdutosPage() {
           body: JSON.stringify({
             title: form.title,
             handle,
+            thumbnail: thumbUrl,
             subtitle: form.subtitle || undefined,
             description: form.description || undefined,
             status: form.status,
@@ -258,6 +299,7 @@ export default function ProdutosPage() {
         const body: any = {
           title: form.title,
           handle,
+          thumbnail: thumbUrl,
           subtitle: form.subtitle || undefined,
           description: form.description || undefined,
           status: form.status,
@@ -337,6 +379,11 @@ export default function ProdutosPage() {
         saving={saving}
         message={message}
         isEdit={mode === "edit"}
+        thumbnail={editThumbnail}
+        images={productImages}
+        onAddImage={handleAddImage}
+        onRemoveImage={handleRemoveImage}
+        uploadingImage={uploadingImage}
       />
     )
   }
@@ -414,8 +461,8 @@ export default function ProdutosPage() {
                 return (
                   <tr key={product.id} className="border-b hover:bg-zinc-50">
                     <td className="p-3">
-                      {product.thumbnail ? (
-                        <img src={product.thumbnail} alt="" className="w-10 h-10 rounded object-cover" />
+                      {(product.thumbnail || product.images?.[0]?.url) ? (
+                        <img src={product.thumbnail || product.images[0].url} alt="" className="w-10 h-10 rounded object-cover" />
                       ) : (
                         <div className="w-10 h-10 rounded bg-zinc-200 flex items-center justify-center text-zinc-400 text-xs">IMG</div>
                       )}
@@ -478,10 +525,85 @@ export default function ProdutosPage() {
 }
 
 /* ====================================================================
+   UPLOAD DE IMAGEM (fora do componente para nao perder foco)
+   ==================================================================== */
+function ImageUploadField({ images, onAdd, onRemove, uploading }: {
+  images: string[]
+  onAdd: (file: File) => void
+  onRemove: (idx: number) => void
+  uploading: boolean
+}) {
+  return (
+    <div>
+      <label className="block text-xs font-semibold text-zinc-600 mb-2">Fotos do Produto</label>
+      <div className="flex flex-wrap gap-3">
+        {images.map((url, idx) => (
+          <div key={idx} className="relative group">
+            <img src={url} alt="" className="w-24 h-24 rounded-lg object-cover border" />
+            <button
+              type="button"
+              onClick={() => onRemove(idx)}
+              className="absolute -top-2 -right-2 w-6 h-6 bg-red-600 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+            >
+              X
+            </button>
+          </div>
+        ))}
+        <label className={`w-24 h-24 rounded-lg border-2 border-dashed border-zinc-300 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors ${uploading ? "opacity-50 pointer-events-none" : ""}`}>
+          {uploading ? (
+            <span className="text-xs text-zinc-400">Enviando...</span>
+          ) : (
+            <>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-zinc-400 mb-1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <span className="text-xs text-zinc-400">Adicionar</span>
+            </>
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0]
+              if (file) onAdd(file)
+              e.target.value = ""
+            }}
+          />
+        </label>
+      </div>
+      {images.length === 0 && <p className="text-xs text-zinc-400 mt-1">Clique para adicionar fotos do produto</p>}
+    </div>
+  )
+}
+
+/* ====================================================================
+   INPUT ESTAVEL (fora do componente para nao perder foco)
+   ==================================================================== */
+function ProdInput({ label, field, placeholder, type = "text", required = false, disabled = false, className = "", value, onChange }: {
+  label: string; field: keyof ProductForm; placeholder?: string; type?: string; required?: boolean; disabled?: boolean; className?: string; value: string; onChange: (field: keyof ProductForm, value: string) => void
+}) {
+  return (
+    <div className={className}>
+      <label className="block text-xs font-semibold text-zinc-600 mb-1">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(field, e.target.value)}
+        placeholder={placeholder}
+        disabled={disabled}
+        className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-zinc-100"
+      />
+    </div>
+  )
+}
+
+/* ====================================================================
    FORMULARIO DE PRODUTO
    ==================================================================== */
 function ProductFormView({
-  form, setForm, onSave, onBack, saving, message, isEdit,
+  form, setForm, onSave, onBack, saving, message, isEdit, thumbnail,
+  images, onAddImage, onRemoveImage, uploadingImage,
 }: {
   form: ProductForm
   setForm: (f: ProductForm) => void
@@ -490,37 +612,22 @@ function ProductFormView({
   saving: boolean
   message: string
   isEdit: boolean
+  thumbnail?: string
+  images: string[]
+  onAddImage: (file: File) => void
+  onRemoveImage: (idx: number) => void
+  uploadingImage: boolean
 }) {
   const update = (field: keyof ProductForm, value: string) => {
     const updated = { ...form, [field]: value }
-    // Auto-gerar slug ao digitar titulo (so no criar)
     if (field === "title" && !isEdit) {
       updated.handle = slugify(value)
     }
-    // Auto-gerar SEO title
     if (field === "title" && !form.seo_title) {
       updated.seo_title = value + " | Compre Online"
     }
     setForm(updated)
   }
-
-  const Input = ({ label, field, placeholder, type = "text", required = false, disabled = false, className = "" }: {
-    label: string; field: keyof ProductForm; placeholder?: string; type?: string; required?: boolean; disabled?: boolean; className?: string
-  }) => (
-    <div className={className}>
-      <label className="block text-xs font-semibold text-zinc-600 mb-1">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
-      <input
-        type={type}
-        value={form[field]}
-        onChange={(e) => update(field, e.target.value)}
-        placeholder={placeholder}
-        disabled={disabled}
-        className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-zinc-100"
-      />
-    </div>
-  )
 
   return (
     <div>
@@ -530,9 +637,16 @@ function ProductFormView({
       </button>
 
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold">{isEdit ? "Editar Produto" : "Novo Produto"}</h2>
-          {form.handle && <p className="text-zinc-500 text-sm mt-1">/{form.handle}</p>}
+        <div className="flex items-center gap-4">
+          {thumbnail ? (
+            <img src={thumbnail} alt="" className="w-16 h-16 rounded-lg object-cover border" />
+          ) : (
+            <div className="w-16 h-16 rounded-lg bg-zinc-200 flex items-center justify-center text-zinc-400 text-xs border">IMG</div>
+          )}
+          <div>
+            <h2 className="text-2xl font-bold">{isEdit ? "Editar Produto" : "Novo Produto"}</h2>
+            {form.handle && <p className="text-zinc-500 text-sm mt-1">/{form.handle}</p>}
+          </div>
         </div>
         <button
           onClick={onSave}
@@ -556,9 +670,9 @@ function ProductFormView({
         <section className="bg-white rounded-xl shadow p-6">
           <h3 className="text-lg font-bold mb-4 pb-2 border-b">Informacoes Basicas</h3>
           <div className="grid grid-cols-2 gap-4">
-            <Input label="Nome do Produto" field="title" placeholder="Ex: Quadro Decorativo Girassol" required className="col-span-2" />
-            <Input label="Slug / URL" field="handle" placeholder="quadro-decorativo-girassol" required />
-            <Input label="Subtitulo" field="subtitle" placeholder="Frase curta para destaque" />
+            <ProdInput label="Nome do Produto" field="title" placeholder="Ex: Quadro Decorativo Girassol" required className="col-span-2" value={form.title} onChange={update} />
+            <ProdInput label="Slug / URL" field="handle" placeholder="quadro-decorativo-girassol" required value={form.handle} onChange={update} />
+            <ProdInput label="Subtitulo" field="subtitle" placeholder="Frase curta para destaque" value={form.subtitle} onChange={update} />
             <div className="col-span-2">
               <label className="block text-xs font-semibold text-zinc-600 mb-1">Descricao do Produto</label>
               <textarea
@@ -570,6 +684,15 @@ function ProductFormView({
               />
             </div>
           </div>
+        </section>
+
+        {/* FOTOS */}
+        <section className="bg-white rounded-xl shadow p-6">
+          <h3 className="text-lg font-bold mb-4 pb-2 border-b">Fotos</h3>
+          <ImageUploadField images={images} onAdd={onAddImage} onRemove={onRemoveImage} uploading={uploadingImage} />
+          {images.length > 0 && (
+            <p className="text-xs text-zinc-400 mt-2">A primeira foto sera usada como thumbnail principal.</p>
+          )}
         </section>
 
         {/* ORGANIZACAO */}
@@ -597,7 +720,7 @@ function ProductFormView({
                 {STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
             </div>
-            <Input label="Tags (separadas por virgula)" field="tags" placeholder="decoracao, quadro, presente" />
+            <ProdInput label="Tags (separadas por virgula)" field="tags" placeholder="decoracao, quadro, presente" value={form.tags} onChange={update} />
           </div>
         </section>
 
@@ -605,12 +728,12 @@ function ProductFormView({
         <section className="bg-white rounded-xl shadow p-6">
           <h3 className="text-lg font-bold mb-4 pb-2 border-b">Identificacao e Preco</h3>
           <div className="grid grid-cols-4 gap-4">
-            <Input label="SKU" field="sku" placeholder="QUADRO001" required disabled={isEdit} />
-            <Input label="Codigo de Barras" field="barcode" placeholder="7891234567890" />
-            <Input label="EAN" field="ean" placeholder="7891234567890" />
+            <ProdInput label="SKU" field="sku" placeholder="QUADRO001" required disabled={isEdit} value={form.sku} onChange={update} />
+            <ProdInput label="Codigo de Barras" field="barcode" placeholder="7891234567890" value={form.barcode} onChange={update} />
+            <ProdInput label="EAN" field="ean" placeholder="7891234567890" value={form.ean} onChange={update} />
             <div />
-            <Input label="Preco (R$)" field="price_brl" placeholder="149.90" type="number" required />
-            <Input label="Preco Comparativo (R$)" field="price_compare_brl" placeholder="199.90" type="number" />
+            <ProdInput label="Preco (R$)" field="price_brl" placeholder="149.90" type="number" required value={form.price_brl} onChange={update} />
+            <ProdInput label="Preco Comparativo (R$)" field="price_compare_brl" placeholder="199.90" type="number" value={form.price_compare_brl} onChange={update} />
           </div>
         </section>
 
@@ -618,14 +741,14 @@ function ProductFormView({
         <section className="bg-white rounded-xl shadow p-6">
           <h3 className="text-lg font-bold mb-4 pb-2 border-b">Dimensoes e Envio</h3>
           <div className="grid grid-cols-4 gap-4">
-            <Input label="Peso (g)" field="weight" placeholder="500" type="number" />
-            <Input label="Comprimento (cm)" field="length" placeholder="90" type="number" />
-            <Input label="Largura (cm)" field="width" placeholder="60" type="number" />
-            <Input label="Altura (cm)" field="height" placeholder="5" type="number" />
-            <Input label="Material" field="material" placeholder="Canvas, MDF, Tecido" />
-            <Input label="Pais de Origem" field="origin_country" placeholder="BR" />
-            <Input label="MID Code" field="mid_code" placeholder="" />
-            <Input label="HS Code (NCM)" field="hs_code" placeholder="49119900" />
+            <ProdInput label="Peso (g)" field="weight" placeholder="500" type="number" value={form.weight} onChange={update} />
+            <ProdInput label="Comprimento (cm)" field="length" placeholder="90" type="number" value={form.length} onChange={update} />
+            <ProdInput label="Largura (cm)" field="width" placeholder="60" type="number" value={form.width} onChange={update} />
+            <ProdInput label="Altura (cm)" field="height" placeholder="5" type="number" value={form.height} onChange={update} />
+            <ProdInput label="Material" field="material" placeholder="Canvas, MDF, Tecido" value={form.material} onChange={update} />
+            <ProdInput label="Pais de Origem" field="origin_country" placeholder="BR" value={form.origin_country} onChange={update} />
+            <ProdInput label="MID Code" field="mid_code" placeholder="" value={form.mid_code} onChange={update} />
+            <ProdInput label="HS Code (NCM)" field="hs_code" placeholder="49119900" value={form.hs_code} onChange={update} />
           </div>
         </section>
 
@@ -633,7 +756,7 @@ function ProductFormView({
         <section className="bg-white rounded-xl shadow p-6">
           <h3 className="text-lg font-bold mb-4 pb-2 border-b">SEO</h3>
           <div className="space-y-4">
-            <Input label="Titulo SEO" field="seo_title" placeholder="Quadro Decorativo Girassol | Compre Online" className="w-full" />
+            <ProdInput label="Titulo SEO" field="seo_title" placeholder="Quadro Decorativo Girassol | Compre Online" className="w-full" value={form.seo_title} onChange={update} />
             <div>
               <label className="block text-xs font-semibold text-zinc-600 mb-1">Descricao SEO (Meta Description)</label>
               <textarea

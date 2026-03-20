@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 
 const API = "http://localhost:4000/api"
 
@@ -86,6 +86,7 @@ export default function PromocoesPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState("")
+  const [copiedCode, setCopiedCode] = useState<string | null>(null)
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -104,9 +105,32 @@ export default function PromocoesPage() {
 
   useEffect(() => { loadData() }, [loadData])
 
+  /* ===== SUMMARY STATS ===== */
+  const stats = useMemo(() => {
+    const now = new Date()
+    let active = 0
+    let expired = 0
+    for (const p of promotions) {
+      const isExpired = p.valid_until && new Date(p.valid_until) < now
+      if (p.active && !isExpired) active++
+      else if (isExpired) expired++
+    }
+    return { total: promotions.length, active, expired }
+  }, [promotions])
+
   const showMsg = (msg: string, duration = 4000) => {
     setMessage(msg)
     setTimeout(() => setMessage(""), duration)
+  }
+
+  const copyCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code)
+      setCopiedCode(code)
+      setTimeout(() => setCopiedCode(null), 2000)
+    } catch {
+      showMsg("Erro ao copiar codigo")
+    }
   }
 
   const openCreate = () => {
@@ -117,12 +141,19 @@ export default function PromocoesPage() {
   }
 
   const openEdit = (promo: any) => {
+    const discountForForm =
+      promo.discount_type === "fixo" && promo.discount_value != null
+        ? String(promo.discount_value / 100)
+        : promo.discount_value != null
+          ? String(promo.discount_value)
+          : ""
+
     setForm({
       name: promo.name || "",
       type: promo.type || "cupom",
       code: promo.code || "",
       discount_type: promo.discount_type || "percentual",
-      discount_value: promo.discount_value != null ? String(promo.discount_value) : "",
+      discount_value: discountForForm,
       min_purchase: promo.min_purchase != null ? String(promo.min_purchase) : "",
       category: promo.category || promo.category_id || "",
       min_items: promo.min_items != null ? String(promo.min_items) : "",
@@ -141,13 +172,16 @@ export default function PromocoesPage() {
     if (!form.discount_value) { showMsg("Erro: Valor do desconto obrigatorio"); return }
     setSaving(true)
     try {
+      const rawValue = Number(form.discount_value)
+      const discountValue = form.discount_type === "fixo" ? Math.round(rawValue * 100) : rawValue
+
       const payload: any = {
         action: editingId ? "update" : "create",
         name: form.name,
         type: form.type,
         code: form.code || undefined,
         discount_type: form.discount_type,
-        discount_value: Number(form.discount_value),
+        discount_value: discountValue,
         min_purchase: form.min_purchase ? Number(form.min_purchase) : undefined,
         category: form.category || undefined,
         min_items: form.min_items ? Number(form.min_items) : undefined,
@@ -312,6 +346,22 @@ export default function PromocoesPage() {
         </div>
       </div>
 
+      {/* Summary Stats */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="bg-white rounded-xl shadow p-4 text-center">
+          <p className="text-2xl font-bold text-zinc-800">{stats.total}</p>
+          <p className="text-xs text-zinc-500 mt-1">Total de Promocoes</p>
+        </div>
+        <div className="bg-white rounded-xl shadow p-4 text-center">
+          <p className="text-2xl font-bold text-green-600">{stats.active}</p>
+          <p className="text-xs text-zinc-500 mt-1">Ativas</p>
+        </div>
+        <div className="bg-white rounded-xl shadow p-4 text-center">
+          <p className="text-2xl font-bold text-red-600">{stats.expired}</p>
+          <p className="text-xs text-zinc-500 mt-1">Expiradas</p>
+        </div>
+      </div>
+
       {message && (
         <div className={`mb-4 p-3 rounded-lg text-sm font-medium ${message.includes("Erro") ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700"}`}>
           {message}
@@ -342,19 +392,36 @@ export default function PromocoesPage() {
                 const isActive = promo.active && !isExpired
                 const discountLabel = promo.discount_type === "percentual"
                   ? `${promo.discount_value}%`
-                  : `R$ ${promo.discount_value}`
+                  : formatBRL(promo.discount_value)
 
                 return (
                   <tr key={promo.id} className="border-b hover:bg-zinc-50">
                     <td className="p-3 font-medium">{promo.name}</td>
-                    <td className="p-3 font-mono text-xs">{promo.code || "---"}</td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-1">
+                        <span className="font-mono text-xs">{promo.code || "---"}</span>
+                        {promo.code && (
+                          <button
+                            onClick={() => copyCode(promo.code)}
+                            title="Copiar Codigo"
+                            className="p-1 rounded hover:bg-zinc-200 text-zinc-400 hover:text-zinc-600 transition-colors"
+                          >
+                            {copiedCode === promo.code ? (
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                            ) : (
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </td>
                     <td className="p-3 text-center">
                       <span className={`px-2 py-1 rounded text-xs font-medium ${promo.type === "cupom" ? "bg-blue-100 text-blue-700" : "bg-purple-100 text-purple-700"}`}>
                         {TYPE_LABELS[promo.type] || promo.type}
                       </span>
                     </td>
                     <td className="p-3 text-center font-medium text-green-600">{discountLabel}</td>
-                    <td className="p-3 text-center text-xs">{promo.uses_count ?? 0}/{promo.max_uses || "ilim."}</td>
+                    <td className="p-3 text-center text-xs">{promo.used_count ?? 0}/{promo.max_uses || "ilim."}</td>
                     <td className="p-3 text-center">
                       <span className={`px-2 py-1 rounded text-xs font-medium ${
                         isActive ? "bg-green-100 text-green-700" : isExpired ? "bg-red-100 text-red-700" : "bg-zinc-100 text-zinc-500"

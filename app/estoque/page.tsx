@@ -60,15 +60,15 @@ export default function EstoquePage() {
 
   const openModal = (type: "entrada" | "saida" | "ajuste", product: any) => {
     setModal({ type, product })
-    setModalForm({ location_code: locations[0]?.code || "", quantity: 0, cost_price: 0, reason: "", user_name: "", notes: "" })
+    setModalForm({ location_code: "", quantity: 0, cost_price: 0, reason: "", user_name: "", notes: "" })
     setModalMsg("")
   }
 
   const submitModal = async () => {
     if (!modal) return
     const sku = modal.product.variants?.[0]?.sku
-    if (!sku || !modalForm.location_code || modalForm.quantity <= 0) {
-      setModalMsg("Preencha todos os campos obrigatorios")
+    if (!sku || modalForm.quantity <= 0) {
+      setModalMsg("Preencha a quantidade")
       return
     }
     setModalSaving(true)
@@ -77,7 +77,7 @@ export default function EstoquePage() {
       const payload: any = {
         action,
         sku,
-        location_code: modalForm.location_code,
+        location_code: modalForm.location_code || "GERAL",
         user_name: modalForm.user_name,
         notes: modalForm.notes,
       }
@@ -379,11 +379,17 @@ export default function EstoquePage() {
             <div className="space-y-3">
               <div>
                 <label className="block text-xs font-semibold text-zinc-600 mb-1">Localizacao</label>
-                <select value={modalForm.location_code} onChange={(e) => setModalForm(f => ({ ...f, location_code: e.target.value }))}
-                  className="w-full px-3 py-2 border rounded-lg text-sm bg-white">
-                  <option value="">Selecione...</option>
+                <input
+                  type="text"
+                  value={modalForm.location_code}
+                  onChange={(e) => setModalForm(f => ({ ...f, location_code: e.target.value.toUpperCase() }))}
+                  placeholder="Ex: A1-P2, Estoque Principal"
+                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                  list="location-suggestions"
+                />
+                <datalist id="location-suggestions">
                   {locations.map((l: any) => <option key={l.id} value={l.code}>{l.code} - {l.name || l.zone}</option>)}
-                </select>
+                </datalist>
               </div>
 
               <div>

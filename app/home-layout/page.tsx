@@ -52,12 +52,14 @@ interface VitrineData {
   title: string
   limit: number
   category_id: string
+  sort_by: string
 }
 
 type SectionData = BannerData | VitrineData
 
 export default function HomeLayoutPage() {
   const [sections, setSections] = useState<SectionData[]>([])
+  const [categories, setCategories] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState("")
@@ -65,8 +67,12 @@ export default function HomeLayoutPage() {
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      const data = await apiFetch("/admin/home-layout")
-      setSections(data.layout?.sections || data.sections || [])
+      const [layoutData, catData] = await Promise.all([
+        apiFetch("/admin/home-layout"),
+        apiFetch("/admin/categories?action=list"),
+      ])
+      setSections(layoutData.layout?.sections || layoutData.sections || [])
+      setCategories(catData.categories || catData || [])
     } catch (e) {
       console.error(e)
     }
@@ -91,7 +97,7 @@ export default function HomeLayoutPage() {
     if (type === "banner") {
       setSections([...sections, { type: "banner", image_mobile: "", image_desktop: "", link: "/quadros", alt: "Banner" }])
     } else {
-      setSections([...sections, { type: "vitrine", title: "Mais Vendidos", limit: 8, category_id: "" }])
+      setSections([...sections, { type: "vitrine", title: "Mais Vendidos", limit: 8, category_id: "", sort_by: "recent" }])
     }
   }
 
@@ -175,7 +181,7 @@ export default function HomeLayoutPage() {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-4 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-zinc-600 mb-1">Titulo da Vitrine</label>
                     <input type="text" value={(sec as VitrineData).title} onChange={(e) => update(i, "title", e.target.value)} placeholder="Mais Vendidos" className="w-full px-3 py-2 border rounded-lg text-sm" />
@@ -185,10 +191,18 @@ export default function HomeLayoutPage() {
                     <input type="number" value={(sec as VitrineData).limit} onChange={(e) => update(i, "limit", Number(e.target.value))} min={1} max={48} className="w-full px-3 py-2 border rounded-lg text-sm" />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-zinc-600 mb-1">Ordenar por</label>
+                    <label className="block text-xs font-semibold text-zinc-600 mb-1">Categoria</label>
                     <select value={(sec as VitrineData).category_id} onChange={(e) => update(i, "category_id", e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm bg-white">
-                      <option value="">Mais Vendidos</option>
-                      <option value="novidades">Novidades</option>
+                      <option value="">Todas</option>
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-zinc-600 mb-1">Ordenar por</label>
+                    <select value={(sec as VitrineData).sort_by || "recent"} onChange={(e) => update(i, "sort_by", e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm bg-white">
+                      <option value="recent">Mais Recentes</option>
                       <option value="menor-preco">Menor Preco</option>
                       <option value="maior-preco">Maior Preco</option>
                     </select>

@@ -32,6 +32,42 @@ const ESTADOS_BR = [
   "PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"
 ]
 
+/* ===== CARRIERS CONFIG ===== */
+const CARRIERS = [
+  {
+    id: "imile",
+    name: "iMile",
+    description: "Entrega expressa e standard para todo o Brasil",
+    logo: "https://www.imile.com/favicon.ico",
+    hasApiIntegration: true,
+    fields: ["imile_product_code"],
+  },
+  {
+    id: "correios",
+    name: "Correios",
+    description: "PAC, SEDEX e Mini Envios via Correios",
+    logo: "",
+    hasApiIntegration: false,
+    fields: [],
+  },
+  {
+    id: "jadlog",
+    name: "Jadlog",
+    description: "Transportadora rodoviaria para e-commerce",
+    logo: "",
+    hasApiIntegration: false,
+    fields: [],
+  },
+  {
+    id: "manual",
+    name: "Manual / Proprio",
+    description: "Entrega propria ou transportadora sem integracao",
+    logo: "",
+    hasApiIntegration: false,
+    fields: [],
+  },
+]
+
 /* ===== HELPERS ===== */
 function centsToBRL(cents: number | null | undefined) {
   if (!cents && cents !== 0) return ""
@@ -53,8 +89,9 @@ export default function FretePage() {
   const [freeShippingMin, setFreeShippingMin] = useState("")
   const [flatRateEnabled, setFlatRateEnabled] = useState(false)
   const [flatRateAmount, setFlatRateAmount] = useState("")
-  const [carrier, setCarrier] = useState("imile")
+  const [activeCarrier, setActiveCarrier] = useState("imile")
   const [imileProductCode, setImileProductCode] = useState("")
+  const [imileStatus, setImileStatus] = useState<"checking" | "online" | "offline" | null>(null)
 
   // Zones state
   const [zones, setZones] = useState<any[]>([])
@@ -85,7 +122,7 @@ export default function FretePage() {
         setFreeShippingMin(cfg.free_shipping_min ? centsToBRL(cfg.free_shipping_min) : "")
         setFlatRateEnabled(cfg.flat_rate_enabled || false)
         setFlatRateAmount(cfg.flat_rate_amount ? centsToBRL(cfg.flat_rate_amount) : "")
-        setCarrier(cfg.carrier || "imile")
+        setActiveCarrier(cfg.carrier || "imile")
         setImileProductCode(cfg.imile_product_code || "")
       }
 
@@ -98,6 +135,25 @@ export default function FretePage() {
 
   useEffect(() => { loadData() }, [loadData])
 
+  // Check iMile status
+  const checkImileStatus = async () => {
+    setImileStatus("checking")
+    try {
+      const res = await api("/admin/fulfillment?action=stats")
+      if (res.stats || res.pending !== undefined) {
+        setImileStatus("online")
+      } else {
+        setImileStatus("offline")
+      }
+    } catch {
+      setImileStatus("offline")
+    }
+  }
+
+  useEffect(() => {
+    if (activeCarrier === "imile") checkImileStatus()
+  }, [activeCarrier])
+
   // ========== SAVE CONFIG ==========
   const saveConfig = async () => {
     try {
@@ -109,7 +165,7 @@ export default function FretePage() {
             free_shipping_min: freeShippingEnabled ? brlToCents(freeShippingMin) : 0,
             flat_rate_enabled: flatRateEnabled,
             flat_rate_amount: flatRateEnabled ? brlToCents(flatRateAmount) : 0,
-            carrier,
+            carrier: activeCarrier,
             imile_product_code: imileProductCode || null,
             active: true,
           },
@@ -233,7 +289,7 @@ export default function FretePage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-2xl font-bold">Frete</h2>
-          <p className="text-zinc-500 text-sm mt-1">Configuracao de envio e zonas de entrega</p>
+          <p className="text-zinc-500 text-sm mt-1">Transportadoras, regras de envio e zonas de entrega</p>
         </div>
         <button onClick={loadData} className="px-4 py-2 bg-zinc-200 rounded-lg text-sm font-medium hover:bg-zinc-300">
           Atualizar
@@ -246,22 +302,124 @@ export default function FretePage() {
         </div>
       )}
 
-      {/* ========== CONFIGURACAO GERAL ========== */}
+      {/* ========== TRANSPORTADORAS ========== */}
       <div className="bg-white rounded-xl shadow p-6 mb-6">
-        <h3 className="text-lg font-semibold mb-4">Configuracao Geral</h3>
+        <h3 className="text-lg font-semibold mb-4 pb-2 border-b">Transportadoras</h3>
+        <p className="text-xs text-zinc-400 mb-4">Selecione a transportadora ativa para calculo de frete no checkout</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {CARRIERS.map((c) => {
+            const isActive = activeCarrier === c.id
+            return (
+              <div
+                key={c.id}
+                className={`border-2 rounded-xl p-4 cursor-pointer transition-all ${
+                  isActive
+                    ? "border-blue-500 bg-blue-50/50"
+                    : "border-zinc-200 hover:border-zinc-300 bg-white"
+                }`}
+                onClick={() => setActiveCarrier(c.id)}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold ${
+                      isActive ? "bg-blue-600 text-white" : "bg-zinc-100 text-zinc-500"
+                    }`}>
+                      {c.name.slice(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm">{c.name}</p>
+                      <p className="text-xs text-zinc-500">{c.description}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                      isActive ? "bg-green-100 text-green-700" : "bg-zinc-100 text-zinc-500"
+                    }`}>
+                      {isActive ? "Ativa" : "Inativa"}
+                    </span>
+                    {c.hasApiIntegration && (
+                      <span className="px-2 py-0.5 rounded-full text-xs bg-purple-100 text-purple-700">API</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* iMile specific config */}
+                {isActive && c.id === "imile" && (
+                  <div className="mt-4 pt-3 border-t border-blue-200 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-zinc-600">Status API:</span>
+                      {imileStatus === "checking" ? (
+                        <span className="text-xs text-zinc-400">Verificando...</span>
+                      ) : imileStatus === "online" ? (
+                        <span className="flex items-center gap-1 text-xs text-green-600">
+                          <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" /> Online
+                        </span>
+                      ) : imileStatus === "offline" ? (
+                        <span className="flex items-center gap-1 text-xs text-red-600">
+                          <span className="w-2 h-2 rounded-full bg-red-500" /> Offline
+                        </span>
+                      ) : null}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); checkImileStatus() }}
+                        className="text-xs text-blue-600 hover:underline ml-1"
+                      >
+                        Testar
+                      </button>
+                    </div>
+                    <div onClick={(e) => e.stopPropagation()}>
+                      <label className="text-xs text-zinc-500">Codigo Produto iMile</label>
+                      <input
+                        type="text"
+                        value={imileProductCode}
+                        onChange={(e) => setImileProductCode(e.target.value)}
+                        placeholder="Ex: STD"
+                        className="mt-1 w-full px-3 py-2 border rounded-lg text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Correios - coming soon */}
+                {isActive && c.id === "correios" && (
+                  <div className="mt-4 pt-3 border-t border-blue-200">
+                    <p className="text-xs text-amber-600 bg-amber-50 rounded-lg p-2">
+                      Integracao com API Correios em breve. Por enquanto, use zonas de frete manuais.
+                    </p>
+                  </div>
+                )}
+
+                {/* Jadlog - coming soon */}
+                {isActive && c.id === "jadlog" && (
+                  <div className="mt-4 pt-3 border-t border-blue-200">
+                    <p className="text-xs text-amber-600 bg-amber-50 rounded-lg p-2">
+                      Integracao com Jadlog em breve. Por enquanto, use zonas de frete manuais.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* ========== REGRAS DE FRETE ========== */}
+      <div className="bg-white rounded-xl shadow p-6 mb-6">
+        <h3 className="text-lg font-semibold mb-4 pb-2 border-b">Regras de Frete</h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Frete Gratis */}
-          <div>
-            <label className="flex items-center gap-2 mb-2">
-              <input
-                type="checkbox"
-                checked={freeShippingEnabled}
-                onChange={(e) => setFreeShippingEnabled(e.target.checked)}
-                className="rounded"
-              />
+          <div className={`border rounded-xl p-4 ${freeShippingEnabled ? "border-green-300 bg-green-50/30" : "border-zinc-200"}`}>
+            <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-medium">Frete Gratis</span>
-            </label>
+              <button
+                type="button"
+                onClick={() => setFreeShippingEnabled(!freeShippingEnabled)}
+                className={`relative w-11 h-6 rounded-full transition-colors ${freeShippingEnabled ? "bg-green-600" : "bg-zinc-300"}`}
+              >
+                <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${freeShippingEnabled ? "translate-x-5" : ""}`} />
+              </button>
+            </div>
             {freeShippingEnabled && (
               <div>
                 <label className="text-xs text-zinc-500">Valor minimo para frete gratis (R$)</label>
@@ -274,19 +432,23 @@ export default function FretePage() {
                 />
               </div>
             )}
+            {!freeShippingEnabled && (
+              <p className="text-xs text-zinc-400">Ative para oferecer frete gratis acima de um valor minimo</p>
+            )}
           </div>
 
           {/* Frete Fixo */}
-          <div>
-            <label className="flex items-center gap-2 mb-2">
-              <input
-                type="checkbox"
-                checked={flatRateEnabled}
-                onChange={(e) => setFlatRateEnabled(e.target.checked)}
-                className="rounded"
-              />
+          <div className={`border rounded-xl p-4 ${flatRateEnabled ? "border-blue-300 bg-blue-50/30" : "border-zinc-200"}`}>
+            <div className="flex items-center justify-between mb-3">
               <span className="text-sm font-medium">Frete Fixo</span>
-            </label>
+              <button
+                type="button"
+                onClick={() => setFlatRateEnabled(!flatRateEnabled)}
+                className={`relative w-11 h-6 rounded-full transition-colors ${flatRateEnabled ? "bg-blue-600" : "bg-zinc-300"}`}
+              >
+                <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${flatRateEnabled ? "translate-x-5" : ""}`} />
+              </button>
+            </div>
             {flatRateEnabled && (
               <div>
                 <label className="text-xs text-zinc-500">Valor do frete fixo (R$)</label>
@@ -299,40 +461,16 @@ export default function FretePage() {
                 />
               </div>
             )}
+            {!flatRateEnabled && (
+              <p className="text-xs text-zinc-400">Ative para cobrar um valor fixo independente do destino</p>
+            )}
           </div>
-
-          {/* Transportadora */}
-          <div>
-            <label className="text-sm font-medium block mb-1">Transportadora</label>
-            <select
-              value={carrier}
-              onChange={(e) => setCarrier(e.target.value)}
-              className="w-full px-3 py-2 border rounded-lg text-sm"
-            >
-              <option value="imile">iMile</option>
-              <option value="manual">Manual</option>
-            </select>
-          </div>
-
-          {/* Codigo Produto iMile */}
-          {carrier === "imile" && (
-            <div>
-              <label className="text-sm font-medium block mb-1">Codigo Produto iMile</label>
-              <input
-                type="text"
-                value={imileProductCode}
-                onChange={(e) => setImileProductCode(e.target.value)}
-                placeholder="Ex: STD"
-                className="w-full px-3 py-2 border rounded-lg text-sm"
-              />
-            </div>
-          )}
         </div>
 
-        <div className="mt-6">
+        <div className="mt-6 flex justify-end">
           <button
             onClick={saveConfig}
-            className="px-6 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800"
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
           >
             Salvar Configuracao
           </button>
@@ -342,10 +480,13 @@ export default function FretePage() {
       {/* ========== ZONAS DE FRETE ========== */}
       <div className="bg-white rounded-xl shadow p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Zonas de Frete</h3>
+          <div>
+            <h3 className="text-lg font-semibold">Zonas de Frete</h3>
+            <p className="text-xs text-zinc-400 mt-1">Defina valores e prazos por regiao</p>
+          </div>
           <button
             onClick={() => { resetZoneForm(); setShowZoneForm(true) }}
-            className="px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
           >
             + Nova Zona
           </button>
@@ -408,7 +549,7 @@ export default function FretePage() {
                     onClick={() => toggleState(uf)}
                     className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
                       zoneStates.includes(uf)
-                        ? "bg-zinc-900 text-white"
+                        ? "bg-blue-600 text-white"
                         : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
                     }`}
                   >
@@ -421,7 +562,7 @@ export default function FretePage() {
             <div className="flex gap-2">
               <button
                 onClick={saveZone}
-                className="px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
               >
                 {editingZone ? "Salvar Alteracoes" : "Criar Zona"}
               </button>
@@ -447,7 +588,7 @@ export default function FretePage() {
                   <th className="pb-2 font-medium">Estados</th>
                   <th className="pb-2 font-medium">Valor</th>
                   <th className="pb-2 font-medium">Prazo</th>
-                  <th className="pb-2 font-medium">Ativo</th>
+                  <th className="pb-2 font-medium">Status</th>
                   <th className="pb-2 font-medium">Acoes</th>
                 </tr>
               </thead>
@@ -467,11 +608,11 @@ export default function FretePage() {
                     <td className="py-3">
                       <button
                         onClick={() => toggleZoneActive(zone)}
-                        className={`px-2 py-1 rounded text-xs font-medium ${
-                          zone.active ? "bg-green-100 text-green-700" : "bg-zinc-100 text-zinc-500"
+                        className={`relative w-10 h-5 rounded-full transition-colors ${
+                          zone.active ? "bg-green-600" : "bg-zinc-300"
                         }`}
                       >
-                        {zone.active ? "Ativo" : "Inativo"}
+                        <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${zone.active ? "translate-x-5" : ""}`} />
                       </button>
                     </td>
                     <td className="py-3">

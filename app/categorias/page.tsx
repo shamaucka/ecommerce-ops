@@ -26,6 +26,20 @@ async function api(path: string, options?: RequestInit) {
   return res.json()
 }
 
+async function uploadFile(file: File): Promise<string> {
+  const token = await getToken()
+  const fd = new FormData()
+  fd.append("file", file)
+  const res = await fetch(`${API}/admin/uploads`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: fd,
+  })
+  const data = await res.json()
+  if (data.files && data.files[0]) return "http://localhost:4000" + data.files[0].url
+  return ""
+}
+
 /* ===== SLUG GENERATOR ===== */
 function slugify(text: string) {
   return text
@@ -70,6 +84,18 @@ export default function CategoriasPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState("")
+  const [uploadingImage, setUploadingImage] = useState(false)
+
+  const handleUploadImage = async (file: File) => {
+    setUploadingImage(true)
+    try {
+      const url = await uploadFile(file)
+      if (url) setForm((prev: CategoryForm) => ({ ...prev, image_url: url }))
+    } catch (e) {
+      console.error("Erro no upload:", e)
+    }
+    setUploadingImage(false)
+  }
 
   const loadCategories = useCallback(async () => {
     setLoading(true)
@@ -240,9 +266,42 @@ export default function CategoriasPage() {
                 <label className="block text-xs font-semibold text-zinc-600 mb-1">Descricao</label>
                 <textarea value={form.description} onChange={(e) => update("description", e.target.value)} placeholder="Descricao da categoria..." className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" rows={4} />
               </div>
-              <div>
-                <label className="block text-xs font-semibold text-zinc-600 mb-1">URL da Imagem</label>
-                <input type="text" value={form.image_url} onChange={(e) => update("image_url", e.target.value)} placeholder="https://..." className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <div className="col-span-2">
+                <label className="block text-xs font-semibold text-zinc-600 mb-2">Imagem da Categoria</label>
+                <div className="flex items-start gap-4">
+                  {form.image_url ? (
+                    <div className="relative group">
+                      <img src={form.image_url} alt="" className="w-24 h-24 rounded-lg object-cover border" />
+                      <button
+                        type="button"
+                        onClick={() => update("image_url", "")}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-600 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        X
+                      </button>
+                    </div>
+                  ) : null}
+                  <label className={`w-24 h-24 rounded-lg border-2 border-dashed border-zinc-300 flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors ${uploadingImage ? "opacity-50 pointer-events-none" : ""}`}>
+                    {uploadingImage ? (
+                      <span className="text-xs text-zinc-400">Enviando...</span>
+                    ) : (
+                      <>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-zinc-400 mb-1"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        <span className="text-xs text-zinc-400">{form.image_url ? "Trocar" : "Upload"}</span>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) handleUploadImage(file)
+                        e.target.value = ""
+                      }}
+                    />
+                  </label>
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-zinc-600 mb-1">Posicao</label>
@@ -310,6 +369,7 @@ export default function CategoriasPage() {
           <table className="w-full text-sm">
             <thead className="bg-zinc-100">
               <tr>
+                <th className="p-3 text-left w-12"></th>
                 <th className="p-3 text-left w-16">Pos.</th>
                 <th className="p-3 text-left">Nome</th>
                 <th className="p-3 text-left">Slug</th>
@@ -321,6 +381,13 @@ export default function CategoriasPage() {
             <tbody>
               {sorted.map((cat, idx) => (
                 <tr key={cat.id} className="border-b hover:bg-zinc-50">
+                  <td className="p-3">
+                    {cat.image_url ? (
+                      <img src={cat.image_url} alt="" className="w-10 h-10 rounded object-cover" />
+                    ) : (
+                      <div className="w-10 h-10 rounded bg-zinc-200 flex items-center justify-center text-zinc-400 text-xs">IMG</div>
+                    )}
+                  </td>
                   <td className="p-3 text-zinc-500 font-mono text-xs">{cat.position ?? idx}</td>
                   <td className="p-3">
                     <div className="font-medium">{cat.name}</div>
