@@ -92,6 +92,9 @@ export default function FretePage() {
   const [activeCarrier, setActiveCarrier] = useState("imile")
   const [imileProductCode, setImileProductCode] = useState("")
   const [imileStatus, setImileStatus] = useState<"checking" | "online" | "offline" | null>(null)
+  const [extraDays, setExtraDays] = useState("0")
+  const [extraCost, setExtraCost] = useState("")
+  const [senderZipcode, setSenderZipcode] = useState("")
 
   // Zones state
   const [zones, setZones] = useState<any[]>([])
@@ -124,6 +127,9 @@ export default function FretePage() {
         setFlatRateAmount(cfg.flat_rate_amount ? centsToBRL(cfg.flat_rate_amount) : "")
         setActiveCarrier(cfg.carrier || "imile")
         setImileProductCode(cfg.imile_product_code || "")
+        setExtraDays(String(cfg.extra_days || 0))
+        setExtraCost(cfg.extra_cost ? centsToBRL(cfg.extra_cost) : "")
+        setSenderZipcode(cfg.sender_zipcode || "")
       }
 
       setZones(zonesRes.zones || [])
@@ -167,6 +173,9 @@ export default function FretePage() {
             flat_rate_amount: flatRateEnabled ? brlToCents(flatRateAmount) : 0,
             carrier: activeCarrier,
             imile_product_code: imileProductCode || null,
+            extra_days: parseInt(extraDays) || 0,
+            extra_cost: extraCost ? brlToCents(extraCost) : 0,
+            sender_zipcode: senderZipcode || null,
             active: true,
           },
         }),
@@ -464,6 +473,48 @@ export default function FretePage() {
             {!flatRateEnabled && (
               <p className="text-xs text-zinc-400">Ative para cobrar um valor fixo independente do destino</p>
             )}
+          </div>
+        </div>
+
+        {/* Ajustes Extras */}
+        <div className="mt-6 pt-4 border-t">
+          <h4 className="text-sm font-semibold text-zinc-700 mb-3">Ajustes sobre o calculo da transportadora</h4>
+          <p className="text-xs text-zinc-400 mb-4">Adicione dias ou valor extra sobre o que a transportadora (iMile) calcular. Aplicado tambem sobre zonas manuais.</p>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="text-xs text-zinc-500">CEP de Origem (remetente)</label>
+              <input
+                type="text"
+                value={senderZipcode}
+                onChange={(e) => setSenderZipcode(e.target.value.replace(/\D/g, "").slice(0, 8))}
+                placeholder="Ex: 01001000"
+                className="mt-1 w-full px-3 py-2 border rounded-lg text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-zinc-500">Dias extras (+)</label>
+              <input
+                type="number"
+                value={extraDays}
+                onChange={(e) => setExtraDays(e.target.value)}
+                min="0"
+                placeholder="0"
+                className="mt-1 w-full px-3 py-2 border rounded-lg text-sm"
+              />
+              <p className="text-xs text-zinc-400 mt-1">Ex: +5 dias sobre o prazo calculado</p>
+            </div>
+            <div>
+              <label className="text-xs text-zinc-500">Valor extra (R$)</label>
+              <input
+                type="text"
+                value={extraCost}
+                onChange={(e) => setExtraCost(e.target.value)}
+                placeholder="0,00"
+                className="mt-1 w-full px-3 py-2 border rounded-lg text-sm"
+              />
+              <p className="text-xs text-zinc-400 mt-1">Ex: +R$4,00 sobre o valor calculado</p>
+            </div>
           </div>
         </div>
 
