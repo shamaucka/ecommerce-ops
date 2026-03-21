@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 
-import { API, API_HOST } from "../lib/api-url"
+import { API, API_HOST, ADMIN_EMAIL, ADMIN_PASS } from "../lib/api-url"
 
 let _tc: { token: string; ts: number } | null = null
 async function getToken() {
@@ -10,7 +10,7 @@ async function getToken() {
   const res = await fetch(API + "/auth/user/emailpass", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: "admin@sualoja.com.br", password: "admin123" }),
+    body: JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASS }),
   })
   const d = await res.json()
   _tc = { token: d.token, ts: Date.now() }

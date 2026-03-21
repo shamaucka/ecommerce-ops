@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useCallback } from "react"
 
-import { API } from "../lib/api-url"
+import { API, ADMIN_EMAIL, ADMIN_PASS } from "../lib/api-url"
 
 async function fetchAuth(path: string, options?: RequestInit) {
   const loginRes = await fetch(`${API}/auth/user/emailpass`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: "admin@sualoja.com.br", password: "admin123" }),
+    body: JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASS }),
   })
   const { token } = await loginRes.json()
   return fetch(`${API}${path}`, {

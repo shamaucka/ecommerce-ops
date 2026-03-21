@@ -1,10 +1,8 @@
-import { API } from "../lib/api-url"
+import { API, ADMIN_EMAIL, ADMIN_PASS } from "../lib/api-url"
 const API_BASE = API + "/admin/fulfillment-ops"
 const AUTH_URL = API + "/auth/user/emailpass"
 
-// Credenciais do admin (em produção usar env vars)
-const ADMIN_EMAIL = "admin@sualoja.com.br"
-const ADMIN_PASSWORD = "admin123"
+const ADMIN_PASSWORD = ADMIN_PASS
 
 let cachedToken: string | null = null
 
