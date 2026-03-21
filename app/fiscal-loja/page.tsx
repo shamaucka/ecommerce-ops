@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 
-const API = "http://localhost:4000/api"
+import { API } from "../lib/api-url"
 
 const REGIMES = [
   { value: "simples_nacional", label: "Simples Nacional" },

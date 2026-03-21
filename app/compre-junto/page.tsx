@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 
-const API = "http://localhost:4000/api"
+import { API } from "../lib/api-url"
 
 /* ===== AUTH HELPER ===== */
 let _tokenCache: { token: string; ts: number } | null = null

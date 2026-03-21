@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 
-const API = "http://localhost:4000/api"
+import { API, API_HOST } from "../lib/api-url"
 
 /* ===== AUTH HELPER ===== */
 let _tokenCache: { token: string; ts: number } | null = null
@@ -36,7 +36,7 @@ async function uploadFile(file: File): Promise<string> {
     body: fd,
   })
   const data = await res.json()
-  if (data.files && data.files[0]) return "http://localhost:4000" + data.files[0].url
+  if (data.files && data.files[0]) return API_HOST + data.files[0].url
   return ""
 }
 
@@ -208,8 +208,8 @@ export default function ProdutosPage() {
     })
     setEditingId(product.id)
     setEditThumbnail(product.thumbnail || product.images?.[0]?.url || "")
-    const imgs = (product.images || []).map((img: any) => img.url?.startsWith("http") ? img.url : "http://localhost:4000" + img.url).filter(Boolean)
-    if (!imgs.length && product.thumbnail) imgs.push(product.thumbnail.startsWith("http") ? product.thumbnail : "http://localhost:4000" + product.thumbnail)
+    const imgs = (product.images || []).map((img: any) => img.url?.startsWith("http") ? img.url : API_HOST + img.url).filter(Boolean)
+    if (!imgs.length && product.thumbnail) imgs.push(product.thumbnail.startsWith("http") ? product.thumbnail : API_HOST + product.thumbnail)
     setProductImages(imgs)
     setMode("edit")
     setMessage("")

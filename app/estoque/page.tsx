@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 
-const API = "http://localhost:4000/api"
+import { API } from "../lib/api-url"
 
 async function fetchAuth(path: string, options?: RequestInit) {
   const loginRes = await fetch(`${API}/auth/user/emailpass`, {

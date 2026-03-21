@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 
-const API = "http://localhost:4000/api"
+import { API, API_HOST } from "../lib/api-url"
 
 /* ===== AUTH HELPER ===== */
 let _tokenCache: { token: string; ts: number } | null = null
@@ -36,7 +36,7 @@ async function uploadFile(file: File): Promise<string> {
     body: fd,
   })
   const data = await res.json()
-  if (data.files && data.files[0]) return "http://localhost:4000" + data.files[0].url
+  if (data.files && data.files[0]) return API_HOST + data.files[0].url
   return ""
 }
 

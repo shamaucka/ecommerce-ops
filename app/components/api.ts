@@ -1,5 +1,6 @@
-const API_BASE = "http://localhost:4000/api/admin/fulfillment-ops"
-const AUTH_URL = "http://localhost:4000/api/auth/user/emailpass"
+import { API } from "../lib/api-url"
+const API_BASE = API + "/admin/fulfillment-ops"
+const AUTH_URL = API + "/auth/user/emailpass"
 
 // Credenciais do admin (em produção usar env vars)
 const ADMIN_EMAIL = "admin@sualoja.com.br"
