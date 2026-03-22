@@ -127,6 +127,8 @@ export default function ProdutosPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState("")
+  const [page, setPage] = useState(1)
+  const perPage = 20
   const [mode, setMode] = useState<"list" | "create" | "edit">("list")
   const [form, setForm] = useState<ProductForm>(emptyForm)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -358,7 +360,7 @@ export default function ProdutosPage() {
     }
   }
 
-  /* ===== FILTRO ===== */
+  /* ===== FILTRO + PAGINACAO ===== */
   const filtered = products.filter((p) => {
     const matchSearch = !search ||
       p.title?.toLowerCase().includes(search.toLowerCase()) ||
@@ -367,6 +369,11 @@ export default function ProdutosPage() {
     const matchStatus = !statusFilter || p.status === statusFilter
     return matchSearch && matchStatus
   })
+  const totalPages = Math.ceil(filtered.length / perPage)
+  const paginated = filtered.slice((page - 1) * perPage, page * perPage)
+
+  // Reset page when filters change
+  useEffect(() => { setPage(1) }, [search, statusFilter])
 
   /* ===== RENDER FORMULARIO ===== */
   if (mode !== "list") {
@@ -452,7 +459,7 @@ export default function ProdutosPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((product) => {
+              {paginated.map((product) => {
                 const v = product.variants?.[0]
                 const priceBrl = v?.prices?.find((p: any) => p.currency_code === "brl")
                 const priceFormatted = priceBrl
@@ -515,9 +522,34 @@ export default function ProdutosPage() {
               })}
             </tbody>
           </table>
-          {filtered.length === 0 && (
+          {paginated.length === 0 && (
             <div className="text-center py-8 text-zinc-400">Nenhum produto encontrado</div>
           )}
+        </div>
+      )}
+
+      {/* PAGINACAO */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-4">
+          <p className="text-sm text-zinc-500">
+            Mostrando {(page - 1) * perPage + 1}-{Math.min(page * perPage, filtered.length)} de {filtered.length}
+          </p>
+          <div className="flex items-center gap-1">
+            <button onClick={() => setPage(1)} disabled={page === 1} className="px-3 py-1 rounded text-sm border disabled:opacity-30 hover:bg-zinc-100">&laquo;</button>
+            <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="px-3 py-1 rounded text-sm border disabled:opacity-30 hover:bg-zinc-100">&lsaquo;</button>
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              let p: number
+              if (totalPages <= 5) p = i + 1
+              else if (page <= 3) p = i + 1
+              else if (page >= totalPages - 2) p = totalPages - 4 + i
+              else p = page - 2 + i
+              return (
+                <button key={p} onClick={() => setPage(p)} className={`px-3 py-1 rounded text-sm border ${page === p ? "bg-blue-600 text-white border-blue-600" : "hover:bg-zinc-100"}`}>{p}</button>
+              )
+            })}
+            <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1 rounded text-sm border disabled:opacity-30 hover:bg-zinc-100">&rsaquo;</button>
+            <button onClick={() => setPage(totalPages)} disabled={page === totalPages} className="px-3 py-1 rounded text-sm border disabled:opacity-30 hover:bg-zinc-100">&raquo;</button>
+          </div>
         </div>
       )}
     </div>
