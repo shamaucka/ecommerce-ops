@@ -97,14 +97,20 @@ export default function DespachoPage() {
   const [errorFlash, setErrorFlash] = useState(false)
   const [success, setSuccess] = useState("")
   const [loading, setLoading] = useState(true)
+  const [allRomaneios, setAllRomaneios] = useState<Romaneio[]>([])
+  const [showHistory, setShowHistory] = useState(false)
 
   const scanRef = useRef<HTMLInputElement>(null)
 
   const loadRomaneios = useCallback(() => {
     setLoading(true)
-    apiGet("romaneios_abertos")
-      .then((data) => {
-        setRomaneios(data.romaneios || [])
+    Promise.all([
+      apiGet("romaneios_abertos"),
+      apiGet("romaneios_todos"),
+    ])
+      .then(([openData, allData]) => {
+        setRomaneios(openData.romaneios || [])
+        setAllRomaneios(allData.romaneios || [])
         setError("")
       })
       .catch((err) => setError(err.message))
@@ -348,6 +354,43 @@ export default function DespachoPage() {
               ))}
             </div>
           )}
+
+          {/* HISTORICO DE ROMANEIOS */}
+          <div className="mt-8">
+            <button onClick={() => setShowHistory(!showHistory)} className="flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-700 mb-3">
+              {showHistory ? "▼" : "▶"} Historico de Romaneios ({allRomaneios.length})
+            </button>
+            {showHistory && allRomaneios.length > 0 && (
+              <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-zinc-100">
+                    <tr>
+                      <th className="p-3 text-left">Transportadora</th>
+                      <th className="p-3 text-center">Pacotes</th>
+                      <th className="p-3 text-center">Status</th>
+                      <th className="p-3 text-left">Criado</th>
+                      <th className="p-3 text-left">Fechado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {allRomaneios.map((r) => (
+                      <tr key={r.id} className="border-b hover:bg-zinc-50 cursor-pointer" onClick={() => loadRomaneioTasks(r)}>
+                        <td className="p-3 font-medium">{r.carrier}</td>
+                        <td className="p-3 text-center">{r.packages_count}</td>
+                        <td className="p-3 text-center">
+                          <span className={`px-2 py-1 rounded text-xs font-medium ${r.status === "aberto" ? "bg-green-100 text-green-700" : "bg-zinc-100 text-zinc-600"}`}>
+                            {r.status === "aberto" ? "Aberto" : "Fechado"}
+                          </span>
+                        </td>
+                        <td className="p-3 text-xs text-zinc-500">{new Date(r.created_at).toLocaleString("pt-BR")}</td>
+                        <td className="p-3 text-xs text-zinc-500">{r.closed_at ? new Date(r.closed_at).toLocaleString("pt-BR") : "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
         </div>
       ) : (
         <div>
