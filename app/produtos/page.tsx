@@ -462,7 +462,7 @@ export default function ProdutosPage() {
                   <tr key={product.id} className="border-b hover:bg-zinc-50">
                     <td className="p-3">
                       {(product.thumbnail || product.images?.[0]?.url) ? (
-                        <img src={product.thumbnail || product.images[0].url} alt="" className="w-10 h-10 rounded object-cover" />
+                        <img src={(() => { const u = product.thumbnail || product.images[0].url; return u?.startsWith("http") ? u : API_HOST + u })()} alt="" className="w-10 h-10 rounded object-cover" />
                       ) : (
                         <div className="w-10 h-10 rounded bg-zinc-200 flex items-center justify-center text-zinc-400 text-xs">IMG</div>
                       )}
@@ -639,7 +639,7 @@ function ProductFormView({
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           {thumbnail ? (
-            <img src={thumbnail} alt="" className="w-16 h-16 rounded-lg object-cover border" />
+            <img src={thumbnail?.startsWith("http") ? thumbnail : API_HOST + thumbnail} alt="" className="w-16 h-16 rounded-lg object-cover border" />
           ) : (
             <div className="w-16 h-16 rounded-lg bg-zinc-200 flex items-center justify-center text-zinc-400 text-xs border">IMG</div>
           )}
