@@ -127,6 +127,8 @@ export default function ProdutosPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState("")
+  const [categoryFilter, setCategoryFilter] = useState("")
+  const [issueFilter, setIssueFilter] = useState("")
   const [page, setPage] = useState(1)
   const perPage = 20
   const [mode, setMode] = useState<"list" | "create" | "edit">("list")
@@ -361,19 +363,30 @@ export default function ProdutosPage() {
   }
 
   /* ===== FILTRO + PAGINACAO ===== */
+  const allCategories = [...new Set(products.map((p) => p.metadata?.category).filter(Boolean))].sort()
+
   const filtered = products.filter((p) => {
     const matchSearch = !search ||
       p.title?.toLowerCase().includes(search.toLowerCase()) ||
       p.handle?.toLowerCase().includes(search.toLowerCase()) ||
       p.variants?.some((v: any) => v.sku?.toLowerCase().includes(search.toLowerCase()))
     const matchStatus = !statusFilter || p.status === statusFilter
-    return matchSearch && matchStatus
+    const matchCategory = !categoryFilter || p.metadata?.category === categoryFilter
+    const v = p.variants?.[0]
+    const priceBrl = v?.prices?.find((pr: any) => pr.currency_code === "brl")
+    const hasIssue = issueFilter === "sem_preco" ? !priceBrl || priceBrl.amount === 0
+      : issueFilter === "sem_imagem" ? !p.thumbnail && (!p.images || p.images.length === 0)
+      : issueFilter === "sem_sku" ? !v?.sku
+      : issueFilter === "sem_categoria" ? !p.metadata?.category
+      : issueFilter === "rascunho" ? p.status === "draft"
+      : true
+    return matchSearch && matchStatus && matchCategory && hasIssue
   })
   const totalPages = Math.ceil(filtered.length / perPage)
   const paginated = filtered.slice((page - 1) * perPage, page * perPage)
 
   // Reset page when filters change
-  useEffect(() => { setPage(1) }, [search, statusFilter])
+  useEffect(() => { setPage(1) }, [search, statusFilter, categoryFilter, issueFilter])
 
   /* ===== RENDER FORMULARIO ===== */
   if (mode !== "list") {
@@ -424,21 +437,41 @@ export default function ProdutosPage() {
       )}
 
       {/* FILTROS */}
-      <div className="flex gap-3 mb-4">
+      <div className="flex flex-wrap gap-3 mb-4">
         <input
           type="text"
           placeholder="Buscar por nome, slug ou SKU..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 max-w-md px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 min-w-[200px] max-w-md px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">Todos os status</option>
           {STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+        </select>
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          className="px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Todas categorias</option>
+          {allCategories.map((c) => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <select
+          value={issueFilter}
+          onChange={(e) => setIssueFilter(e.target.value)}
+          className="px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Sem filtro de erro</option>
+          <option value="sem_preco">Sem preco</option>
+          <option value="sem_imagem">Sem imagem</option>
+          <option value="sem_sku">Sem SKU</option>
+          <option value="sem_categoria">Sem categoria</option>
+          <option value="rascunho">Rascunhos</option>
         </select>
       </div>
 
