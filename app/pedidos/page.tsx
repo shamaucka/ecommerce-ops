@@ -29,26 +29,28 @@ async function api(path: string, options?: RequestInit) {
 /* ===== CONSTANTES ===== */
 const STATUS_TABS = [
   { value: "", label: "Todos" },
-  { value: "pending", label: "Pendente" },
-  { value: "paid", label: "Pago" },
-  { value: "shipped", label: "Enviado" },
+  { value: "pending", label: "Aguardando Pagamento" },
+  { value: "processing", label: "Pago / Processar" },
+  { value: "shipped", label: "Em Transporte" },
   { value: "delivered", label: "Entregue" },
-  { value: "canceled", label: "Cancelado" },
+  { value: "cancelled", label: "Cancelado" },
 ]
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-yellow-100 text-yellow-700",
-  paid: "bg-blue-100 text-blue-700",
-  shipped: "bg-purple-100 text-purple-700",
-  delivered: "bg-green-100 text-green-700",
-  canceled: "bg-red-100 text-red-700",
+  processing: "bg-green-100 text-green-700",
+  shipped: "bg-amber-100 text-amber-700",
+  delivered: "bg-purple-100 text-purple-700",
+  cancelled: "bg-gray-100 text-gray-500",
+  canceled: "bg-gray-100 text-gray-500",
 }
 
 const STATUS_LABELS: Record<string, string> = {
-  pending: "Pendente",
-  paid: "Pago",
-  shipped: "Enviado",
+  pending: "Aguardando Pgto",
+  processing: "Pago",
+  shipped: "Em Transporte",
   delivered: "Entregue",
+  cancelled: "Cancelado",
   canceled: "Cancelado",
 }
 
