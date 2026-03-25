@@ -267,11 +267,11 @@ function OrderRow({
                 <h4 className="text-xs font-bold text-zinc-500 uppercase mb-2">Acoes</h4>
                 <div className="space-y-2">
                   {status === "pending" && (
-                    <button onClick={(e) => { e.stopPropagation(); onUpdateStatus(order.id, "paid") }} className="w-full px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+                    <button onClick={(e) => { e.stopPropagation(); onUpdateStatus(order.id, "processing") }} className="w-full px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
                       Marcar como Pago
                     </button>
                   )}
-                  {(status === "paid") && (
+                  {(status === "processing") && (
                     <div className="space-y-2">
                       <input
                         type="text"
