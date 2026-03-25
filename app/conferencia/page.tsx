@@ -82,21 +82,37 @@ export default function ConferenciaPage() {
   const autoPrint = useCallback(async (taskData: Task) => {
     setAutoPrinting(true)
     try {
-      await apiPost("mark_conference_printed", { task_id: taskData.id })
+      // 1. Finalizar conferência: emite NF-e + cria pedido iMile + busca etiqueta
+      setSuccess("⏳ Emitindo NF-e e gerando etiqueta iMile...")
+      const result = await apiPost("finalize_conferencia", { task_id: taskData.id })
 
-      const printHtml = generateDanfeAndLabelHtml(taskData)
+      // Atualizar taskData com dados reais retornados
+      const updatedTask = {
+        ...taskData,
+        invoice_number: result.nfe?.numero || taskData.invoice_number || "PENDENTE",
+        invoice_key: result.nfe?.chave || taskData.invoice_key || "",
+        tracking_code: result.imile?.waybillNo || result.imile?.orderCode || taskData.tracking_code || "",
+        carrier: "iMile",
+      }
+
+      if (result.errors?.length > 0) {
+        const errMsgs = result.errors.map((e: any) => `${e.step}: ${e.error}`).join("; ")
+        setError("Avisos: " + errMsgs)
+      }
+
+      // 2. Gerar HTML e imprimir
+      const printHtml = generateDanfeAndLabelHtml(updatedTask)
       const printWindow = window.open("", "_blank", "width=400,height=600")
       if (printWindow) {
         printWindow.document.write(printHtml)
         printWindow.document.close()
         printWindow.focus()
-        // Pequeno delay para renderizar os barcodes no canvas antes de imprimir
         setTimeout(() => {
           printWindow.print()
         }, 300)
       }
 
-      setSuccess("✅ Conferência completa! DANFE + Etiqueta enviados para impressora.")
+      setSuccess("✅ Conferência completa! NF-e emitida, etiqueta iMile gerada.")
     } catch (err: any) {
       setError("Erro ao imprimir: " + err.message)
     } finally {
