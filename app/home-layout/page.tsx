@@ -35,7 +35,10 @@ async function uploadFile(file: File): Promise<string> {
     body: fd,
   })
   const data = await res.json()
-  if (data.files && data.files[0]) return API_HOST + data.files[0].url
+  if (data.files && data.files[0]) {
+    const url = data.files[0].url
+    return url.startsWith("http") ? url : API_HOST + url
+  }
   return ""
 }
 
