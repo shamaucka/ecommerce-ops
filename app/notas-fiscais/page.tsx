@@ -428,7 +428,7 @@ export default function NotasFiscaisPage() {
                         >
                           {actionLoading === nfe.id + "_danfe" ? "..." : "DANFE"}
                         </button>
-                        {status === "autorizada" && (
+                        {(status !== "cancelada") && (
                           <>
                             <button
                               onClick={() => handleDanfeSimplificada(nfe)}
@@ -453,7 +453,7 @@ export default function NotasFiscaisPage() {
                         >
                           {actionLoading === nfe.id + "_consult" ? "..." : "Consultar"}
                         </button>
-                        {status === "autorizada" && (
+                        {(status !== "cancelada") && (
                           <button
                             onClick={() => handleCancelar(nfe.id)}
                             disabled={actionLoading === nfe.id + "_cancel"}
