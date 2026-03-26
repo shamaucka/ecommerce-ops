@@ -223,18 +223,13 @@ export default function NotasFiscaisPage() {
         body: JSON.stringify({ action: "get_imile_label", id: nfe.id }),
       })
       if (data.labelBase64) {
-        const pdfDataUri = `data:application/pdf;base64,${data.labelBase64}`
-        const printWindow = window.open("", "_blank", "width=600,height=800")
-        if (printWindow) {
-          printWindow.document.write(`
-            <!DOCTYPE html>
-            <html><head><title>Etiqueta iMile</title></head>
-            <body style="margin:0;padding:0;">
-              <iframe src="${pdfDataUri}" style="width:100%;height:100%;border:none;" onload="setTimeout(function(){ window.print(); }, 500)"></iframe>
-            </body></html>
-          `)
-          printWindow.document.close()
-        }
+        // Converter base64 para blob e abrir em nova aba
+        const byteChars = atob(data.labelBase64)
+        const byteArr = new Uint8Array(byteChars.length)
+        for (let i = 0; i < byteChars.length; i++) byteArr[i] = byteChars.charCodeAt(i)
+        const blob = new Blob([byteArr], { type: "application/pdf" })
+        const url = URL.createObjectURL(blob)
+        window.open(url, "_blank")
       } else if (data.url) {
         window.open(data.url, "_blank")
       } else {
