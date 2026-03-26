@@ -590,94 +590,96 @@ function StatCard({ label, value, color }: { label: string; value: number; color
 
 /* ===== DANFE SIMPLIFICADA 10x15 HTML ===== */
 function generateDanfeSimplificadaHtml(nfe: any): string {
-  const nfBarcode = nfe.chave_acesso || nfe.numero || "000000"
-  const items = nfe.itens || nfe.items || []
+  const chave = nfe.chave_acesso || ""
+  const chaveFormatada = chave.replace(/(\d{4})/g, "$1 ").trim()
+  const protocolo = nfe.protocolo || ""
+  const nfNum = nfe.numero || "---"
+  const serie = nfe.serie || "3"
+  const dataEmissao = nfe.created_at ? new Date(nfe.created_at).toLocaleDateString("pt-BR") : new Date().toLocaleDateString("pt-BR")
+  const horaEmissao = nfe.created_at ? new Date(nfe.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+  const valorTotal = nfe.valor_total ? (nfe.valor_total / 100).toFixed(2) : "0.00"
+  const clienteNome = nfe.customer_name || nfe.cliente_nome || "---"
 
   return `<!DOCTYPE html>
 <html><head>
 <meta charset="utf-8">
-<title>DANFE Simplificada - ${nfe.numero || "---"}</title>
+<title>DANFE - NF-e ${nfNum}</title>
 <style>
-  @page { size: 100mm 150mm; margin: 3mm; }
-  body { font-family: Arial, sans-serif; font-size: 10px; width: 94mm; margin: 0 auto; }
-  .section { border: 1px solid #000; padding: 4px; margin-bottom: 4px; }
-  .title { font-size: 14px; font-weight: bold; text-align: center; border-bottom: 2px solid #000; padding-bottom: 4px; margin-bottom: 6px; }
-  .row { display: flex; justify-content: space-between; margin-bottom: 2px; }
-  .label { font-weight: bold; }
-  table { width: 100%; border-collapse: collapse; font-size: 9px; }
-  th, td { border: 1px solid #ccc; padding: 2px 4px; }
-  th { background: #eee; }
-  .bc-wrap { text-align: center; margin: 8px 0 4px; }
+  @page { size: 100mm 150mm; margin: 2mm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 7pt; width: 96mm; margin: 0 auto; color: #000; }
+  .border { border: 1px solid #000; }
+  .header { text-align: center; padding: 2px; border-bottom: 2px solid #000; }
+  .header h1 { font-size: 10pt; font-weight: bold; margin: 0; letter-spacing: 1px; }
+  .header p { font-size: 6pt; margin: 1px 0; }
+  .section { padding: 2px 3px; border-bottom: 1px solid #000; }
+  .section-title { font-size: 6pt; font-weight: bold; text-transform: uppercase; color: #333; margin-bottom: 1px; letter-spacing: 0.5px; }
+  .row { display: flex; justify-content: space-between; line-height: 1.4; }
+  .label { font-weight: bold; font-size: 6.5pt; text-transform: uppercase; }
+  .chave { font-family: 'Courier New', monospace; font-size: 6pt; word-break: break-all; letter-spacing: 0.3px; text-align: center; padding: 2px 0; }
+  .bc-wrap { text-align: center; padding: 3px 0; }
   .bc-wrap canvas { display: block; margin: 0 auto; }
-  .bc-text { font-size: 10px; font-weight: bold; letter-spacing: 1px; margin-top: 2px; }
+  .bold { font-weight: bold; }
+  .emit-info { font-size: 6.5pt; line-height: 1.3; }
+  .dest-box { background: #f5f5f5; padding: 2px 3px; }
+  .footer { font-size: 5.5pt; text-align: center; color: #666; padding: 2px; }
 </style>
 </head><body>
-<div>
-  <div class="title">DANFE SIMPLIFICADA</div>
-  <div class="section">
-    <div class="row"><span class="label">NF-e:</span> <span>${nfe.numero || "---"}</span></div>
-    <div class="row"><span class="label">Serie:</span> <span>${nfe.serie || "3"}</span></div>
-    <div class="row"><span class="label">Cliente:</span> <span>${nfe.cliente_nome || nfe.destinatario?.nome || "\u2014"}</span></div>
-    <div class="row"><span class="label">Chave:</span></div>
-    <div style="font-family:monospace;font-size:8px;word-break:break-all">${nfe.chave_acesso || "\u2014"}</div>
-    <div class="row"><span class="label">Valor:</span> <span>${nfe.valor ? (nfe.valor / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "\u2014"}</span></div>
-    <div class="row"><span class="label">Data:</span> <span>${nfe.data_emissao ? new Date(nfe.data_emissao).toLocaleDateString("pt-BR") : new Date().toLocaleDateString("pt-BR")}</span></div>
+<div class="border">
+  <div class="header">
+    <h1>DANFE SIMPLIFICADA</h1>
+    <p>DOCUMENTO AUXILIAR DA NOTA FISCAL ELETRONICA</p>
   </div>
-  ${items.length > 0 ? "<table><tr><th>Produto</th><th>Qtd</th></tr>" + items.map((i: any) => "<tr><td>" + (i.descricao || i.product_title || i.nome || "---") + "</td><td style='text-align:center'>" + (i.quantidade || i.quantity || 1) + "</td></tr>").join("") + "</table>" : ""}
-  <div class="bc-wrap">
-    <canvas id="bc-nf"></canvas>
-    <div class="bc-text">${nfe.numero || "---"}</div>
+  <div class="section">
+    <div class="section-title">Emitente</div>
+    <div class="emit-info">
+      <div class="bold" style="font-size:8pt">AMERICA FULLCOMMERCE LTDA</div>
+      <div>CNPJ: 53.768.405/0001-30 | IE: 262795078</div>
+      <div>Rod. Jorge Lacerda, 2670 - Poco Grande - Gaspar/SC</div>
+      <div>CEP: 89115-100</div>
+    </div>
+  </div>
+  <div class="section">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div class="section-title">NF-e</div>
+        <div style="font-size:12pt;font-weight:bold">${nfNum}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="label">Serie: ${serie}</div>
+        <div class="label">Emissao: ${dataEmissao}</div>
+        <div class="label">Hora: ${horaEmissao}</div>
+      </div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-title">Chave de Acesso</div>
+    <div class="bc-wrap"><canvas id="bc-chave"></canvas></div>
+    <div class="chave">${chaveFormatada || "CHAVE PENDENTE"}</div>
+    ${protocolo ? '<div style="font-size:5.5pt;text-align:center;color:#555">Protocolo: ' + protocolo + '</div>' : ''}
+  </div>
+  <div class="section dest-box">
+    <div class="section-title">Destinatario</div>
+    <div class="bold">${clienteNome}</div>
+    <div>CPF/CNPJ: ${nfe.customer_cpf || "---"}</div>
+  </div>
+  <div class="section">
+    <div class="section-title">Dados da Nota</div>
+    <div class="row"><span class="label">CFOP: ${nfe.cfop || "---"}</span><span class="label">Nat. Op.: ${nfe.natureza_operacao || "---"}</span></div>
+    <div class="row"><span class="bold" style="font-size:9pt">Valor NF: R$ ${valorTotal}</span></div>
+  </div>
+  <div class="footer">
+    Consulte a autenticidade em www.nfe.fazenda.gov.br<br>
+    Impresso em ${new Date().toLocaleDateString("pt-BR")} ${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
   </div>
 </div>
 <script>
 (function() {
-  var P = [
-    "11011001100","11001101100","11001100110","10010011000","10010001100",
-    "10001001100","10011001000","10011000100","10001100100","11001001000",
-    "11001000100","11000100100","10110011100","10011011100","10011001110",
-    "10111001100","10011101100","10011100110","11001110010","11001011100",
-    "11001001110","11011100100","11001110100","11100110100","11100100110",
-    "11100010110","11101100100","11100110010","11100011010","11101101110",
-    "11101110110","11100010010","11101110010","11011110000","11100011110",
-    "10100110000","10100001100","10010110000","10010000110","10000101100",
-    "10000100110","10110010000","10110000100","10011010000","10011000010",
-    "10000110100","10000110010","11000010010","11001010000","11110111010",
-    "11000010100","10001111010","10100111100","10010111100","10010011110",
-    "10111100100","10011110100","10011110010","11110100100","11110010100",
-    "11110010010","11011011110","11011110110","11110110110","10101111000",
-    "10100011110","10001011110","10111101000","10111100010","11110101000",
-    "11110100010","10111011110","10111101110","11101011110","11110101110",
-    "11010000100","11010010000","11010011100","11000110100","11000100010",
-    "11000010010","10110001000","10001100010","10001000110","10110111000",
-    "10110001110","10001101110","10111011000","10111000110","10001110110",
-    "11101011000","11101000110","11100010110","11011101000","11011100010",
-    "11000111010","11011101110","11011000110","11000110110","10010111000",
-    "10010001110","10001001110","11010111000","11010001110","11000101110",
-    "11010111000","1100011101011"
-  ];
-  function enc(t) {
-    var c = [104];
-    for (var i = 0; i < t.length; i++) c.push(t.charCodeAt(i) - 32);
-    var s = c[0];
-    for (var i = 1; i < c.length; i++) s += c[i] * i;
-    c.push(s % 103);
-    c.push(106);
-    return c.map(function(v) { return P[v]; }).join('');
-  }
-  function render(id, text, h) {
-    var el = document.getElementById(id);
-    if (!el) return;
-    var bits = enc(text), bw = 2;
-    el.width = bits.length * bw; el.height = h || 50;
-    var ctx = el.getContext('2d');
-    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, el.width, el.height);
-    ctx.fillStyle = '#000';
-    for (var i = 0; i < bits.length; i++) {
-      if (bits[i] === '1') ctx.fillRect(i * bw, 0, bw, el.height);
-    }
-  }
-  render('bc-nf', '${nfBarcode}', 35);
+  var P = ["11011001100","11001101100","11001100110","10010011000","10010001100","10001001100","10011001000","10011000100","10001100100","11001001000","11001000100","11000100100","10110011100","10011011100","10011001110","10111001100","10011101100","10011100110","11001110010","11001011100","11001001110","11011100100","11001110100","11100110100","11100100110","11100010110","11101100100","11100110010","11100011010","11101101110","11101110110","11100010010","11101110010","11011110000","11100011110","10100110000","10100001100","10010110000","10010000110","10000101100","10000100110","10110010000","10110000100","10011010000","10011000010","10000110100","10000110010","11000010010","11001010000","11110111010","11000010100","10001111010","10100111100","10010111100","10010011110","10111100100","10011110100","10011110010","11110100100","11110010100","11110010010","11011011110","11011110110","11110110110","10101111000","10100011110","10001011110","10111101000","10111100010","11110101000","11110100010","10111011110","10111101110","11101011110","11110101110","11010000100","11010010000","11010011100","11000110100","11000100010","11000010010","10110001000","10001100010","10001000110","10110111000","10110001110","10001101110","10111011000","10111000110","10001110110","11101011000","11101000110","11100010110","11011101000","11011100010","11000111010","11011101110","11011000110","11000110110","10010111000","10010001110","10001001110","11010111000","11010001110","11000101110","11010111000","1100011101011"];
+  function enc(t){var c=[104];for(var i=0;i<t.length;i++)c.push(t.charCodeAt(i)-32);var s=c[0];for(var i=1;i<c.length;i++)s+=c[i]*i;c.push(s%103);c.push(106);return c.map(function(v){return P[v]}).join('')}
+  function render(id,text,h){var el=document.getElementById(id);if(!el||!text||text==='CHAVE PENDENTE')return;var bits=enc(text),bw=1;el.width=bits.length*bw;el.height=h||40;var ctx=el.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,el.width,el.height);ctx.fillStyle='#000';for(var i=0;i<bits.length;i++){if(bits[i]==='1')ctx.fillRect(i*bw,0,bw,el.height)}}
+  render('bc-chave','${chave}',40);
 })();
-<\/script>
+</script>
 </body></html>`
 }
