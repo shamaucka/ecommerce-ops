@@ -159,14 +159,19 @@ export default function NotasFiscaisPage() {
   }
 
   const handleCancelar = async (nfeId: string) => {
-    if (!confirm("Tem certeza que deseja cancelar esta NFe?")) return
+    if (!confirm("Confirma o cancelamento da NFe na SEFAZ?")) return
+    const justificativa = "Pedido cancelado pela cliente conforme solicitacao"
     setActionLoading(nfeId + "_cancel")
     try {
-      await api("/admin/nfe-manager", {
+      const data = await api("/admin/nfe-manager", {
         method: "POST",
-        body: JSON.stringify({ action: "cancel", id: nfeId }),
+        body: JSON.stringify({ action: "cancel", id: nfeId, justificativa }),
       })
-      showMsg("NFe cancelada com sucesso")
+      if (data.result?.success) {
+        showMsg("NFe cancelada com sucesso na SEFAZ")
+      } else {
+        showMsg("Erro SEFAZ: " + (data.result?.error || data.error || "Falha no cancelamento"))
+      }
       await loadNotas()
       await loadStats()
     } catch (e: any) {
