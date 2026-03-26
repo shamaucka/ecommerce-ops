@@ -132,18 +132,13 @@ export default function ConferenciaPage() {
       setError("Etiqueta iMile não disponível. Verifique se o pedido iMile foi criado com sucesso.")
       return
     }
-    const pdfDataUri = `data:application/pdf;base64,${labelBase64}`
-    const printWindow = window.open("", "_blank", "width=600,height=800")
-    if (printWindow) {
-      printWindow.document.write(`
-        <!DOCTYPE html>
-        <html><head><title>Etiqueta iMile</title></head>
-        <body style="margin:0;padding:0;">
-          <iframe src="${pdfDataUri}" style="width:100%;height:100%;border:none;" onload="setTimeout(function(){ window.print(); }, 500)"></iframe>
-        </body></html>
-      `)
-      printWindow.document.close()
-    }
+    // Convert base64 to blob URL for full-page PDF rendering
+    const byteChars = atob(labelBase64)
+    const byteNumbers = new Array(byteChars.length)
+    for (let i = 0; i < byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i)
+    const blob = new Blob([new Uint8Array(byteNumbers)], { type: "application/pdf" })
+    const blobUrl = URL.createObjectURL(blob)
+    window.open(blobUrl, "_blank")
   }, [labelBase64])
 
   const checkItem = useCallback(async (identifier: string) => {
