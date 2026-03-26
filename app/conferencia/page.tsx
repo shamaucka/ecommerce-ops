@@ -411,47 +411,133 @@ export default function ConferenciaPage() {
 }
 
 function generateDanfeHtml(task: any): string {
-  const nfBarcode = task.invoice_key || task.invoice_number || task.display_id
+  const chave = task.invoice_key || ""
+  const chaveFormatada = chave.replace(/(\d{4})/g, "$1 ").trim()
+  const protocolo = task.protocolo || ""
+  const nfNum = task.invoice_number || "---"
+  const serie = "3"
+  const dataEmissao = new Date().toLocaleDateString("pt-BR")
+  const horaEmissao = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+  const totalItens = (task.items || []).reduce((s: number, i: any) => s + (i.quantity || 1), 0)
+  const valorTotal = task.order_total ? (task.order_total / 100).toFixed(2) : "0.00"
 
   return `<!DOCTYPE html>
 <html><head>
 <meta charset="utf-8">
-<title>DANFE Simplificada - #${task.display_id}</title>
+<title>DANFE - NF-e ${nfNum}</title>
 <style>
-  @page { size: 100mm 150mm; margin: 3mm; }
-  body { font-family: Arial, sans-serif; font-size: 10px; width: 94mm; margin: 0 auto; }
-  .section { border: 1px solid #000; padding: 4px; margin-bottom: 4px; }
-  .title { font-size: 14px; font-weight: bold; text-align: center; border-bottom: 2px solid #000; padding-bottom: 4px; margin-bottom: 6px; }
-  .row { display: flex; justify-content: space-between; margin-bottom: 2px; }
-  .label { font-weight: bold; }
-  table { width: 100%; border-collapse: collapse; font-size: 9px; }
-  th, td { border: 1px solid #ccc; padding: 2px 4px; }
-  th { background: #eee; }
-  .bc-wrap { text-align: center; margin: 8px 0 4px; }
+  @page { size: 100mm 150mm; margin: 2mm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 7pt; width: 96mm; margin: 0 auto; color: #000; }
+  .border { border: 1px solid #000; }
+  .header { text-align: center; padding: 2px; border-bottom: 2px solid #000; }
+  .header h1 { font-size: 10pt; font-weight: bold; margin: 0; letter-spacing: 1px; }
+  .header p { font-size: 6pt; margin: 1px 0; }
+  .section { padding: 2px 3px; border-bottom: 1px solid #000; }
+  .section-title { font-size: 6pt; font-weight: bold; text-transform: uppercase; color: #333; margin-bottom: 1px; letter-spacing: 0.5px; }
+  .row { display: flex; justify-content: space-between; line-height: 1.4; }
+  .label { font-weight: bold; font-size: 6.5pt; text-transform: uppercase; }
+  .value { font-size: 7pt; }
+  .chave { font-family: 'Courier New', monospace; font-size: 6pt; word-break: break-all; letter-spacing: 0.3px; text-align: center; padding: 2px 0; }
+  .bc-wrap { text-align: center; padding: 3px 0; }
   .bc-wrap canvas { display: block; margin: 0 auto; }
-  .bc-text { font-size: 10px; font-weight: bold; letter-spacing: 1px; margin-top: 2px; }
+  .bc-text { font-family: 'Courier New', monospace; font-size: 7pt; font-weight: bold; letter-spacing: 1px; margin-top: 1px; }
+  table { width: 100%; border-collapse: collapse; font-size: 6.5pt; }
+  th { background: #e0e0e0; font-size: 6pt; text-transform: uppercase; padding: 1px 2px; border: 1px solid #999; text-align: left; }
+  td { padding: 1px 2px; border: 1px solid #ccc; }
+  .center { text-align: center; }
+  .right { text-align: right; }
+  .bold { font-weight: bold; }
+  .emit-info { font-size: 6.5pt; line-height: 1.3; }
+  .footer { font-size: 5.5pt; text-align: center; color: #666; padding: 2px; }
+  .dest-box { background: #f5f5f5; padding: 2px 3px; }
 </style>
 </head><body>
-<div>
-  <div class="title">DANFE SIMPLIFICADA</div>
-  <div class="section">
-    <div class="row"><span class="label">Pedido:</span> <span>#${task.display_id}</span></div>
-    <div class="row"><span class="label">Cliente:</span> <span>${task.customer_name || "\u2014"}</span></div>
-    <div class="row"><span class="label">NF-e:</span> <span>${task.invoice_number || "Pendente"}</span></div>
-    <div class="row"><span class="label">Chave:</span></div>
-    <div style="font-family:monospace;font-size:8px;word-break:break-all">${task.invoice_key || "\u2014"}</div>
-    <div class="row"><span class="label">Data:</span> <span>${new Date().toLocaleDateString("pt-BR")}</span></div>
+<div class="border">
+  <!-- CABECALHO -->
+  <div class="header">
+    <h1>DANFE SIMPLIFICADA</h1>
+    <p>DOCUMENTO AUXILIAR DA NOTA FISCAL ELETRONICA</p>
   </div>
-  <table>
-    <tr><th>Produto</th><th>SKU</th><th>Qtd</th></tr>
-    ${(task.items || []).map((i: any) => `<tr><td>${i.product_title}${i.variant_title ? ` - ${i.variant_title}` : ""}</td><td style="font-family:monospace;font-size:8px">${i.sku}</td><td style="text-align:center">${i.quantity}</td></tr>`).join("")}
-  </table>
-  <div style="margin-top:6px;font-size:9px;text-align:center">Total de itens: ${task.items_total}</div>
-  <div class="bc-wrap">
-    <canvas id="bc-nf"></canvas>
-    <div class="bc-text">${task.invoice_number || task.display_id}</div>
+
+  <!-- EMITENTE -->
+  <div class="section">
+    <div class="section-title">Emitente</div>
+    <div class="emit-info">
+      <div class="bold" style="font-size:8pt">AMERICA FULLCOMMERCE LTDA</div>
+      <div>CNPJ: 53.768.405/0001-30 | IE: 262795078</div>
+      <div>Rod. Jorge Lacerda, 2670 - Poco Grande - Gaspar/SC</div>
+      <div>CEP: 89115-100</div>
+    </div>
+  </div>
+
+  <!-- DADOS DA NF-e -->
+  <div class="section">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div class="section-title">NF-e</div>
+        <div style="font-size:12pt;font-weight:bold">${nfNum}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="label">Serie: ${serie}</div>
+        <div class="label">Emissao: ${dataEmissao}</div>
+        <div class="label">Hora: ${horaEmissao}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHAVE DE ACESSO + BARCODE -->
+  <div class="section">
+    <div class="section-title">Chave de Acesso</div>
+    <div class="bc-wrap">
+      <canvas id="bc-chave"></canvas>
+    </div>
+    <div class="chave">${chaveFormatada || "CHAVE PENDENTE"}</div>
+    ${protocolo ? '<div style="font-size:5.5pt;text-align:center;color:#555">Protocolo: ' + protocolo + '</div>' : ''}
+  </div>
+
+  <!-- DESTINATARIO -->
+  <div class="section dest-box">
+    <div class="section-title">Destinatario</div>
+    <div class="bold">${task.customer_name || "---"}</div>
+    <div>Email: ${task.customer_email || "---"}</div>
+  </div>
+
+  <!-- PRODUTOS -->
+  <div class="section">
+    <div class="section-title">Produtos</div>
+    <table>
+      <tr><th>Descricao</th><th class="center">Qtd</th><th>SKU</th></tr>
+      ${(task.items || []).map((i: any) => '<tr><td>' + (i.product_title || "---") + '</td><td class="center">' + (i.quantity || 1) + '</td><td style="font-family:monospace;font-size:6pt">' + (i.sku || "---") + '</td></tr>').join("")}
+    </table>
+    <div style="margin-top:2px;display:flex;justify-content:space-between">
+      <span class="bold">Itens: ${totalItens}</span>
+      <span class="bold">Valor NF: R$ ${valorTotal}</span>
+    </div>
+  </div>
+
+  <!-- TRANSPORTE -->
+  <div class="section">
+    <div class="section-title">Transporte</div>
+    <div class="row">
+      <span class="label">Transportadora: ${task.carrier || "---"}</span>
+    </div>
+    <div class="row">
+      <span class="label">Rastreio: ${task.tracking_code || "---"}</span>
+    </div>
+    <div class="row">
+      <span>Pedido: #${task.display_id}</span>
+      <span>Volumes: 1</span>
+    </div>
+  </div>
+
+  <!-- RODAPE -->
+  <div class="footer">
+    Consulte a autenticidade em www.nfe.fazenda.gov.br<br>
+    Impresso em ${dataEmissao} ${horaEmissao}
   </div>
 </div>
+
 <script>
 (function() {
   var P = [
@@ -489,9 +575,9 @@ function generateDanfeHtml(task: any): string {
   }
   function render(id, text, h) {
     var el = document.getElementById(id);
-    if (!el) return;
-    var bits = enc(text), bw = 2;
-    el.width = bits.length * bw; el.height = h || 50;
+    if (!el || !text || text === 'CHAVE PENDENTE') return;
+    var bits = enc(text), bw = 1;
+    el.width = bits.length * bw; el.height = h || 40;
     var ctx = el.getContext('2d');
     ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, el.width, el.height);
     ctx.fillStyle = '#000';
@@ -499,7 +585,7 @@ function generateDanfeHtml(task: any): string {
       if (bits[i] === '1') ctx.fillRect(i * bw, 0, bw, el.height);
     }
   }
-  render('bc-nf', '${nfBarcode}', 35);
+  render('bc-chave', '${chave}', 40);
 })();
 </script>
 </body></html>`
