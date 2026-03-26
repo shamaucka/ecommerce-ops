@@ -89,7 +89,8 @@ export default function ConferenciaPage() {
         ...taskData,
         invoice_number: result.nfe?.numero || taskData.invoice_number || "PENDENTE",
         invoice_key: result.nfe?.chave || taskData.invoice_key || "",
-        tracking_code: result.imile?.waybillNo || result.imile?.orderCode || taskData.tracking_code || "",
+        protocolo: result.nfe?.protocolo || "",
+        tracking_code: result.imile?.expressNo || result.imile?.trackingCode || taskData.tracking_code || "",
         carrier: "iMile",
       }
       setTask(updatedTask)
