@@ -90,6 +90,7 @@ export default function ConferenciaPage() {
         invoice_number: result.nfe?.numero || taskData.invoice_number || "PENDENTE",
         invoice_key: result.nfe?.chave || taskData.invoice_key || "",
         protocolo: result.nfe?.protocolo || "",
+        serie: result.nfe?.serie || "4",
         tracking_code: result.imile?.expressNo || result.imile?.trackingCode || taskData.tracking_code || "",
         carrier: "iMile",
       }
@@ -416,7 +417,7 @@ function generateDanfeHtml(task: any): string {
   const chaveFormatada = chave.replace(/(\d{4})/g, "$1 ").trim()
   const protocolo = task.protocolo || ""
   const nfNum = task.invoice_number || "---"
-  const serie = "3"
+  const serie = task.serie || "4"
   const dataEmissao = new Date().toLocaleDateString("pt-BR")
   const horaEmissao = new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
   const totalItens = (task.items || []).reduce((s: number, i: any) => s + (i.quantity || 1), 0)
@@ -441,7 +442,7 @@ function generateDanfeHtml(task: any): string {
   .value { font-size: 7pt; }
   .chave { font-family: 'Courier New', monospace; font-size: 6pt; word-break: break-all; letter-spacing: 0.3px; text-align: center; padding: 2px 0; }
   .bc-wrap { text-align: center; padding: 3px 0; }
-  .bc-wrap canvas { display: block; margin: 0 auto; }
+  .bc-wrap canvas { display: block; margin: 0 auto; max-width: 100%; height: auto; }
   .bc-text { font-family: 'Courier New', monospace; font-size: 7pt; font-weight: bold; letter-spacing: 1px; margin-top: 1px; }
   table { width: 100%; border-collapse: collapse; font-size: 6.5pt; }
   th { background: #e0e0e0; font-size: 6pt; text-transform: uppercase; padding: 1px 2px; border: 1px solid #999; text-align: left; }

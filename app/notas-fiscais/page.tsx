@@ -618,7 +618,7 @@ function generateDanfeSimplificadaHtml(nfe: any): string {
   .label { font-weight: bold; font-size: 6.5pt; text-transform: uppercase; }
   .chave { font-family: 'Courier New', monospace; font-size: 6pt; word-break: break-all; letter-spacing: 0.3px; text-align: center; padding: 2px 0; }
   .bc-wrap { text-align: center; padding: 3px 0; }
-  .bc-wrap canvas { display: block; margin: 0 auto; }
+  .bc-wrap canvas { display: block; margin: 0 auto; max-width: 100%; height: auto; }
   .bold { font-weight: bold; }
   .emit-info { font-size: 6.5pt; line-height: 1.3; }
   .dest-box { background: #f5f5f5; padding: 2px 3px; }
