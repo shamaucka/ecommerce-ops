@@ -28,8 +28,8 @@ async function api(path: string, options?: RequestInit) {
 
 /* ===== CONSTANTES ===== */
 const SERIE_TABS = [
-  { value: "3", label: "Saida (Serie 3)" },
-  { value: "4", label: "Entrada (Serie 4)" },
+  { value: "4", label: "Saida (Serie 4)" },
+  { value: "3", label: "Entrada (Serie 3)" },
 ]
 
 const STATUS_OPTIONS = [
@@ -71,7 +71,7 @@ export default function NotasFiscaisPage() {
   const [notas, setNotas] = useState<any[]>([])
   const [stats, setStats] = useState<any>({})
   const [loading, setLoading] = useState(true)
-  const [serieTab, setSerieTab] = useState("3")
+  const [serieTab, setSerieTab] = useState("4")
   const [statusFilter, setStatusFilter] = useState("")
   const [search, setSearch] = useState("")
   const [message, setMessage] = useState("")
