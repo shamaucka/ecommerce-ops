@@ -191,6 +191,56 @@ export default function NotasFiscaisPage() {
     setActionLoading(null)
   }
 
+  /* ===== DANFE SIMPLIFICADA 10x15 ===== */
+  const handleDanfeSimplificada = async (nfe: any) => {
+    setActionLoading(nfe.id + "_danfe10x15")
+    try {
+      const printHtml = generateDanfeSimplificadaHtml(nfe)
+      const printWindow = window.open("", "_blank", "width=400,height=600")
+      if (printWindow) {
+        printWindow.document.write(printHtml)
+        printWindow.document.close()
+        printWindow.focus()
+        setTimeout(() => printWindow.print(), 300)
+      }
+    } catch (e: any) {
+      showMsg("Erro ao gerar DANFE simplificada: " + e.message)
+    }
+    setActionLoading(null)
+  }
+
+  /* ===== ETIQUETA IMILE ===== */
+  const handleEtiqueta = async (nfe: any) => {
+    setActionLoading(nfe.id + "_etiqueta")
+    try {
+      const data = await api("/admin/nfe-manager", {
+        method: "POST",
+        body: JSON.stringify({ action: "get_imile_label", id: nfe.id }),
+      })
+      if (data.labelBase64) {
+        const pdfDataUri = `data:application/pdf;base64,${data.labelBase64}`
+        const printWindow = window.open("", "_blank", "width=600,height=800")
+        if (printWindow) {
+          printWindow.document.write(`
+            <!DOCTYPE html>
+            <html><head><title>Etiqueta iMile</title></head>
+            <body style="margin:0;padding:0;">
+              <iframe src="${pdfDataUri}" style="width:100%;height:100%;border:none;" onload="setTimeout(function(){ window.print(); }, 500)"></iframe>
+            </body></html>
+          `)
+          printWindow.document.close()
+        }
+      } else if (data.url) {
+        window.open(data.url, "_blank")
+      } else {
+        showMsg("Etiqueta iMile nao disponivel para esta nota fiscal")
+      }
+    } catch (e: any) {
+      showMsg("Erro ao buscar etiqueta: " + e.message)
+    }
+    setActionLoading(null)
+  }
+
   /* ===== EMITIR SAIDA ===== */
   const openEmitModal = async () => {
     setShowEmitModal(true)
@@ -378,6 +428,24 @@ export default function NotasFiscaisPage() {
                         >
                           {actionLoading === nfe.id + "_danfe" ? "..." : "DANFE"}
                         </button>
+                        {status === "autorizada" && (
+                          <>
+                            <button
+                              onClick={() => handleDanfeSimplificada(nfe)}
+                              disabled={actionLoading === nfe.id + "_danfe10x15"}
+                              className="px-2 py-1 bg-sky-600 text-white rounded text-xs font-medium hover:bg-sky-700 disabled:opacity-50"
+                            >
+                              {actionLoading === nfe.id + "_danfe10x15" ? "..." : "DANFE 10x15"}
+                            </button>
+                            <button
+                              onClick={() => handleEtiqueta(nfe)}
+                              disabled={actionLoading === nfe.id + "_etiqueta"}
+                              className="px-2 py-1 bg-purple-600 text-white rounded text-xs font-medium hover:bg-purple-700 disabled:opacity-50"
+                            >
+                              {actionLoading === nfe.id + "_etiqueta" ? "..." : "Etiqueta"}
+                            </button>
+                          </>
+                        )}
                         <button
                           onClick={() => handleConsultar(nfe.id)}
                           disabled={actionLoading === nfe.id + "_consult"}
@@ -518,4 +586,101 @@ function StatCard({ label, value, color }: { label: string; value: number; color
       <p className="text-2xl font-bold mt-1">{value}</p>
     </div>
   )
+}
+
+/* ===== DANFE SIMPLIFICADA 10x15 HTML ===== */
+function generateDanfeSimplificadaHtml(nfe: any): string {
+  const nfBarcode = nfe.chave_acesso || nfe.numero || "000000"
+  const items = nfe.itens || nfe.items || []
+
+  return `<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<title>DANFE Simplificada - ${nfe.numero || "---"}</title>
+<style>
+  @page { size: 100mm 150mm; margin: 3mm; }
+  body { font-family: Arial, sans-serif; font-size: 10px; width: 94mm; margin: 0 auto; }
+  .section { border: 1px solid #000; padding: 4px; margin-bottom: 4px; }
+  .title { font-size: 14px; font-weight: bold; text-align: center; border-bottom: 2px solid #000; padding-bottom: 4px; margin-bottom: 6px; }
+  .row { display: flex; justify-content: space-between; margin-bottom: 2px; }
+  .label { font-weight: bold; }
+  table { width: 100%; border-collapse: collapse; font-size: 9px; }
+  th, td { border: 1px solid #ccc; padding: 2px 4px; }
+  th { background: #eee; }
+  .bc-wrap { text-align: center; margin: 8px 0 4px; }
+  .bc-wrap canvas { display: block; margin: 0 auto; }
+  .bc-text { font-size: 10px; font-weight: bold; letter-spacing: 1px; margin-top: 2px; }
+</style>
+</head><body>
+<div>
+  <div class="title">DANFE SIMPLIFICADA</div>
+  <div class="section">
+    <div class="row"><span class="label">NF-e:</span> <span>${nfe.numero || "---"}</span></div>
+    <div class="row"><span class="label">Serie:</span> <span>${nfe.serie || "3"}</span></div>
+    <div class="row"><span class="label">Cliente:</span> <span>${nfe.cliente_nome || nfe.destinatario?.nome || "\u2014"}</span></div>
+    <div class="row"><span class="label">Chave:</span></div>
+    <div style="font-family:monospace;font-size:8px;word-break:break-all">${nfe.chave_acesso || "\u2014"}</div>
+    <div class="row"><span class="label">Valor:</span> <span>${nfe.valor ? (nfe.valor / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "\u2014"}</span></div>
+    <div class="row"><span class="label">Data:</span> <span>${nfe.data_emissao ? new Date(nfe.data_emissao).toLocaleDateString("pt-BR") : new Date().toLocaleDateString("pt-BR")}</span></div>
+  </div>
+  ${items.length > 0 ? \`<table>
+    <tr><th>Produto</th><th>Qtd</th></tr>
+    \${items.map((i: any) => \`<tr><td>\${i.descricao || i.product_title || i.nome || "---"}</td><td style="text-align:center">\${i.quantidade || i.quantity || 1}</td></tr>\`).join("")}
+  </table>\` : ""}
+  <div class="bc-wrap">
+    <canvas id="bc-nf"></canvas>
+    <div class="bc-text">${nfe.numero || "---"}</div>
+  </div>
+</div>
+<script>
+(function() {
+  var P = [
+    "11011001100","11001101100","11001100110","10010011000","10010001100",
+    "10001001100","10011001000","10011000100","10001100100","11001001000",
+    "11001000100","11000100100","10110011100","10011011100","10011001110",
+    "10111001100","10011101100","10011100110","11001110010","11001011100",
+    "11001001110","11011100100","11001110100","11100110100","11100100110",
+    "11100010110","11101100100","11100110010","11100011010","11101101110",
+    "11101110110","11100010010","11101110010","11011110000","11100011110",
+    "10100110000","10100001100","10010110000","10010000110","10000101100",
+    "10000100110","10110010000","10110000100","10011010000","10011000010",
+    "10000110100","10000110010","11000010010","11001010000","11110111010",
+    "11000010100","10001111010","10100111100","10010111100","10010011110",
+    "10111100100","10011110100","10011110010","11110100100","11110010100",
+    "11110010010","11011011110","11011110110","11110110110","10101111000",
+    "10100011110","10001011110","10111101000","10111100010","11110101000",
+    "11110100010","10111011110","10111101110","11101011110","11110101110",
+    "11010000100","11010010000","11010011100","11000110100","11000100010",
+    "11000010010","10110001000","10001100010","10001000110","10110111000",
+    "10110001110","10001101110","10111011000","10111000110","10001110110",
+    "11101011000","11101000110","11100010110","11011101000","11011100010",
+    "11000111010","11011101110","11011000110","11000110110","10010111000",
+    "10010001110","10001001110","11010111000","11010001110","11000101110",
+    "11010111000","1100011101011"
+  ];
+  function enc(t) {
+    var c = [104];
+    for (var i = 0; i < t.length; i++) c.push(t.charCodeAt(i) - 32);
+    var s = c[0];
+    for (var i = 1; i < c.length; i++) s += c[i] * i;
+    c.push(s % 103);
+    c.push(106);
+    return c.map(function(v) { return P[v]; }).join('');
+  }
+  function render(id, text, h) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var bits = enc(text), bw = 2;
+    el.width = bits.length * bw; el.height = h || 50;
+    var ctx = el.getContext('2d');
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, el.width, el.height);
+    ctx.fillStyle = '#000';
+    for (var i = 0; i < bits.length; i++) {
+      if (bits[i] === '1') ctx.fillRect(i * bw, 0, bw, el.height);
+    }
+  }
+  render('bc-nf', '${nfBarcode}', 35);
+})();
+<\/script>
+</body></html>`
 }

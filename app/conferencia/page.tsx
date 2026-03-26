@@ -40,7 +40,9 @@ export default function ConferenciaPage() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [loading, setLoading] = useState(false)
-  const [autoPrinting, setAutoPrinting] = useState(false)
+  const [finalizing, setFinalizing] = useState(false)
+  const [finalizeResult, setFinalizeResult] = useState<any>(null)
+  const [labelBase64, setLabelBase64] = useState<string | null>(null)
 
   const orderInputRef = useRef<HTMLInputElement>(null)
   const itemInputRef = useRef<HTMLInputElement>(null)
@@ -75,14 +77,10 @@ export default function ConferenciaPage() {
     }
   }
 
-  // ===== IMPRESSÃO AUTOMÁTICA =====
-  // Usa window.print() via popup — o navegador reconhece automaticamente
-  // a impressora padrão configurada na máquina.
-  // Não precisa de integração extra: basta configurar a impressora padrão no SO.
-  const autoPrint = useCallback(async (taskData: Task) => {
-    setAutoPrinting(true)
+  // ===== FINALIZAR CONFERÊNCIA (sem impressão automática) =====
+  const finalizeOrder = useCallback(async (taskData: Task) => {
+    setFinalizing(true)
     try {
-      // 1. Finalizar conferência: emite NF-e + cria pedido iMile + busca etiqueta
       setSuccess("⏳ Emitindo NF-e e gerando etiqueta iMile...")
       const result = await apiPost("finalize_conferencia", { task_id: taskData.id })
 
@@ -94,31 +92,59 @@ export default function ConferenciaPage() {
         tracking_code: result.imile?.waybillNo || result.imile?.orderCode || taskData.tracking_code || "",
         carrier: "iMile",
       }
+      setTask(updatedTask)
+      setFinalizeResult(result)
+
+      // Armazenar labelBase64 para reimpressão
+      if (result.imile?.labelBase64) {
+        setLabelBase64(result.imile.labelBase64)
+      }
 
       if (result.errors?.length > 0) {
         const errMsgs = result.errors.map((e: any) => `${e.step}: ${e.error}`).join("; ")
         setError("Avisos: " + errMsgs)
       }
 
-      // 2. Gerar HTML e imprimir
-      const printHtml = generateDanfeAndLabelHtml(updatedTask)
-      const printWindow = window.open("", "_blank", "width=400,height=600")
-      if (printWindow) {
-        printWindow.document.write(printHtml)
-        printWindow.document.close()
-        printWindow.focus()
-        setTimeout(() => {
-          printWindow.print()
-        }, 300)
-      }
-
-      setSuccess("✅ Conferência completa! NF-e emitida, etiqueta iMile gerada.")
+      setSuccess("✅ Conferência completa! NF-e emitida, etiqueta iMile gerada. Use os botões abaixo para imprimir.")
     } catch (err: any) {
-      setError("Erro ao imprimir: " + err.message)
+      setError("Erro ao finalizar: " + err.message)
     } finally {
-      setAutoPrinting(false)
+      setFinalizing(false)
     }
   }, [])
+
+  // ===== IMPRIMIR DANFE SIMPLIFICADA (10x15) =====
+  const printDanfe = useCallback(() => {
+    if (!task) return
+    const printHtml = generateDanfeHtml(task)
+    const printWindow = window.open("", "_blank", "width=400,height=600")
+    if (printWindow) {
+      printWindow.document.write(printHtml)
+      printWindow.document.close()
+      printWindow.focus()
+      setTimeout(() => printWindow.print(), 300)
+    }
+  }, [task])
+
+  // ===== IMPRIMIR ETIQUETA IMILE (PDF base64) =====
+  const printEtiqueta = useCallback(() => {
+    if (!labelBase64) {
+      setError("Etiqueta iMile não disponível. Verifique se o pedido iMile foi criado com sucesso.")
+      return
+    }
+    const pdfDataUri = `data:application/pdf;base64,${labelBase64}`
+    const printWindow = window.open("", "_blank", "width=600,height=800")
+    if (printWindow) {
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html><head><title>Etiqueta iMile</title></head>
+        <body style="margin:0;padding:0;">
+          <iframe src="${pdfDataUri}" style="width:100%;height:100%;border:none;" onload="setTimeout(function(){ window.print(); }, 500)"></iframe>
+        </body></html>
+      `)
+      printWindow.document.close()
+    }
+  }, [labelBase64])
 
   const checkItem = useCallback(async (identifier: string) => {
     if (!task || !identifier.trim()) return
@@ -150,13 +176,13 @@ export default function ConferenciaPage() {
 
       if (data.allDone) {
         setAllDone(true)
-        // 🔥 IMPRESSÃO AUTOMÁTICA — dispara assim que todos os itens foram conferidos
-        autoPrint(updatedTask)
+        // Finaliza (emite NF-e + cria pedido iMile) mas NÃO imprime automaticamente
+        finalizeOrder(updatedTask)
       }
     } catch (err: any) {
       setError(err.message)
     }
-  }, [task, checkerName, autoPrint])
+  }, [task, checkerName, finalizeOrder])
 
   const handleItemScan = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
@@ -171,21 +197,10 @@ export default function ConferenciaPage() {
     setTotalItems(0)
     setError("")
     setSuccess("")
-    setAutoPrinting(false)
+    setFinalizing(false)
+    setFinalizeResult(null)
+    setLabelBase64(null)
     orderInputRef.current?.focus()
-  }
-
-  // Reimpressão manual caso necessário
-  const manualReprint = () => {
-    if (!task) return
-    const printHtml = generateDanfeAndLabelHtml(task)
-    const printWindow = window.open("", "_blank", "width=400,height=600")
-    if (printWindow) {
-      printWindow.document.write(printHtml)
-      printWindow.document.close()
-      printWindow.focus()
-      setTimeout(() => printWindow.print(), 300)
-    }
   }
 
   return (
@@ -194,7 +209,7 @@ export default function ConferenciaPage() {
         <div>
           <h2 className="text-2xl font-bold">Conferência</h2>
           <p className="text-zinc-500 text-sm mt-1">
-            Bipe o pedido, depois bipe cada item — ao conferir tudo, imprime automaticamente
+            Bipe o pedido, depois bipe cada item — ao conferir tudo, emite NF-e e gera etiqueta
           </p>
         </div>
         {task && (
@@ -307,21 +322,38 @@ export default function ConferenciaPage() {
             </div>
           )}
 
-          {/* Conferência completa — impressão automática já foi disparada */}
+          {/* Conferência completa — botões separados para DANFE e Etiqueta */}
           {allDone && (
             <div className="bg-green-50 border border-green-200 rounded-xl p-5 mb-4 text-center">
               <p className="text-green-700 font-bold text-lg mb-2">
-                {autoPrinting ? "⏳ Imprimindo DANFE + Etiqueta..." : "✅ Todos os itens conferidos!"}
+                {finalizing ? "⏳ Emitindo NF-e e gerando etiqueta iMile..." : "✅ Todos os itens conferidos!"}
               </p>
-              <p className="text-green-600 text-sm mb-3">
-                A impressão foi enviada automaticamente para a impressora padrão.
-              </p>
-              <button
-                onClick={manualReprint}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
-              >
-                Reimprimir DANFE + Etiqueta
-              </button>
+              {!finalizing && finalizeResult && (
+                <>
+                  <p className="text-green-600 text-sm mb-4">
+                    NF-e emitida e pedido iMile criado. Imprima a DANFE e a etiqueta separadamente:
+                  </p>
+                  <div className="flex gap-3 justify-center">
+                    <button
+                      onClick={printDanfe}
+                      className="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+                    >
+                      Imprimir DANFE Simplificada
+                    </button>
+                    <button
+                      onClick={printEtiqueta}
+                      className="px-5 py-2.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700"
+                    >
+                      Imprimir Etiqueta Transportadora
+                    </button>
+                  </div>
+                </>
+              )}
+              {!finalizing && !finalizeResult && (
+                <p className="text-yellow-600 text-sm">
+                  Aguardando finalização...
+                </p>
+              )}
             </div>
           )}
 
@@ -383,14 +415,13 @@ export default function ConferenciaPage() {
   )
 }
 
-function generateDanfeAndLabelHtml(task: any): string {
+function generateDanfeHtml(task: any): string {
   const nfBarcode = task.invoice_key || task.invoice_number || task.display_id
-  const trackingBarcode = task.tracking_code || task.display_id
 
   return `<!DOCTYPE html>
 <html><head>
 <meta charset="utf-8">
-<title>DANFE + Etiqueta - #${task.display_id}</title>
+<title>DANFE Simplificada - #${task.display_id}</title>
 <style>
   @page { size: 100mm 150mm; margin: 3mm; }
   body { font-family: Arial, sans-serif; font-size: 10px; width: 94mm; margin: 0 auto; }
@@ -404,22 +435,16 @@ function generateDanfeAndLabelHtml(task: any): string {
   .bc-wrap { text-align: center; margin: 8px 0 4px; }
   .bc-wrap canvas { display: block; margin: 0 auto; }
   .bc-text { font-size: 10px; font-weight: bold; letter-spacing: 1px; margin-top: 2px; }
-  .cut-line { position: relative; text-align: center; margin: 4px 0; height: 16px; page-break-after: always; }
-  .cut-line .scissors { position: absolute; left: 0; top: -4px; font-size: 14px; }
-  .cut-line .dash { display: block; border-top: 2px dashed #000; margin-top: 7px; margin-left: 16px; }
-  .shipping-label { border: 3px solid #000; padding: 8px; }
-  .shipping-label .big { font-size: 20px; font-weight: bold; text-align: center; }
 </style>
 </head><body>
-<!-- DANFE SIMPLIFICADA -->
 <div>
   <div class="title">DANFE SIMPLIFICADA</div>
   <div class="section">
     <div class="row"><span class="label">Pedido:</span> <span>#${task.display_id}</span></div>
-    <div class="row"><span class="label">Cliente:</span> <span>${task.customer_name || "—"}</span></div>
+    <div class="row"><span class="label">Cliente:</span> <span>${task.customer_name || "\u2014"}</span></div>
     <div class="row"><span class="label">NF-e:</span> <span>${task.invoice_number || "Pendente"}</span></div>
     <div class="row"><span class="label">Chave:</span></div>
-    <div style="font-family:monospace;font-size:8px;word-break:break-all">${task.invoice_key || "—"}</div>
+    <div style="font-family:monospace;font-size:8px;word-break:break-all">${task.invoice_key || "\u2014"}</div>
     <div class="row"><span class="label">Data:</span> <span>${new Date().toLocaleDateString("pt-BR")}</span></div>
   </div>
   <table>
@@ -432,36 +457,9 @@ function generateDanfeAndLabelHtml(task: any): string {
     <div class="bc-text">${task.invoice_number || task.display_id}</div>
   </div>
 </div>
-<div class="cut-line"><span class="scissors">✂</span><span class="dash"></span></div>
-<!-- ETIQUETA DE ENVIO -->
-<div>
-  <div class="shipping-label">
-    <div class="big" style="margin-bottom:8px">ETIQUETA DE ENVIO</div>
-    <div class="section">
-      <div class="label">DESTINATÁRIO:</div>
-      <div style="font-size:14px;font-weight:bold;margin:4px 0">${task.customer_name || "—"}</div>
-      <div>${task.customer_email || ""}</div>
-    </div>
-    <div class="section">
-      <div class="row"><span class="label">Pedido:</span> <span style="font-size:14px;font-weight:bold">#${task.display_id}</span></div>
-      <div class="row"><span class="label">NF-e:</span> <span>${task.invoice_number || "—"}</span></div>
-      <div class="row"><span class="label">Transportadora:</span> <span>${task.carrier || "—"}</span></div>
-      <div class="row"><span class="label">Rastreio:</span> <span style="font-weight:bold">${task.tracking_code || "—"}</span></div>
-      <div class="row"><span class="label">Volumes:</span> <span>1</span></div>
-    </div>
-    <div class="bc-wrap">
-      <canvas id="bc-tracking" style="height:50px"></canvas>
-      <div class="bc-text" style="font-size:13px;letter-spacing:2px">${task.tracking_code || task.display_id}</div>
-    </div>
-    <div style="text-align:center;font-size:8px;margin-top:4px">
-      ${new Date().toLocaleDateString("pt-BR")} ${new Date().toLocaleTimeString("pt-BR")}
-    </div>
-  </div>
-</div>
 <script>
 (function() {
-  // Code128 completo: 107 padrões (0-106)
-  const P = [
+  var P = [
     "11011001100","11001101100","11001100110","10010011000","10010001100",
     "10001001100","10011001000","10011000100","10001100100","11001001000",
     "11001000100","11000100100","10110011100","10011011100","10011001110",
@@ -486,28 +484,27 @@ function generateDanfeAndLabelHtml(task: any): string {
     "11010111000","1100011101011"
   ];
   function enc(t) {
-    let c = [104]; // START B
-    for (let i = 0; i < t.length; i++) c.push(t.charCodeAt(i) - 32);
-    let s = c[0];
-    for (let i = 1; i < c.length; i++) s += c[i] * i;
+    var c = [104];
+    for (var i = 0; i < t.length; i++) c.push(t.charCodeAt(i) - 32);
+    var s = c[0];
+    for (var i = 1; i < c.length; i++) s += c[i] * i;
     c.push(s % 103);
-    c.push(106); // STOP
-    return c.map(v => P[v]).join('');
+    c.push(106);
+    return c.map(function(v) { return P[v]; }).join('');
   }
   function render(id, text, h) {
-    const el = document.getElementById(id);
+    var el = document.getElementById(id);
     if (!el) return;
-    const bits = enc(text), bw = 2;
+    var bits = enc(text), bw = 2;
     el.width = bits.length * bw; el.height = h || 50;
-    const ctx = el.getContext('2d');
+    var ctx = el.getContext('2d');
     ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, el.width, el.height);
     ctx.fillStyle = '#000';
-    for (let i = 0; i < bits.length; i++) {
+    for (var i = 0; i < bits.length; i++) {
       if (bits[i] === '1') ctx.fillRect(i * bw, 0, bw, el.height);
     }
   }
   render('bc-nf', '${nfBarcode}', 35);
-  render('bc-tracking', '${trackingBarcode}', 50);
 })();
 </script>
 </body></html>`
