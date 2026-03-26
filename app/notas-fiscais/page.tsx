@@ -88,6 +88,11 @@ export default function NotasFiscaisPage() {
   const [entradaForm, setEntradaForm] = useState({ chave_acesso: "", fornecedor: "", valor: "" })
   const [entradaLoading, setEntradaLoading] = useState(false)
 
+  // Modal estorno/devolucao
+  const [showEstornoModal, setShowEstornoModal] = useState(false)
+  const [estornoNfe, setEstornoNfe] = useState<any>(null)
+  const [estornoLoading, setEstornoLoading] = useState(false)
+
   const showMsg = (msg: string, duration = 4000) => {
     setMessage(msg)
     setTimeout(() => setMessage(""), duration)
@@ -299,6 +304,41 @@ export default function NotasFiscaisPage() {
     setEntradaLoading(false)
   }
 
+  /* ===== ESTORNO / DEVOLUCAO ===== */
+  const handleEstorno = (nfe: any) => {
+    setEstornoNfe(nfe)
+    setShowEstornoModal(true)
+  }
+
+  const submitEstorno = async () => {
+    if (!estornoNfe) return
+    setEstornoLoading(true)
+    try {
+      const data = await api("/admin/nfe-manager", {
+        method: "POST",
+        body: JSON.stringify({
+          action: "emit_estorno",
+          nfe_referenciada: estornoNfe.chave_acesso,
+          order_id: estornoNfe.order_id,
+          valor_total: estornoNfe.valor_total,
+          motivo: "Devolucao de mercadoria pelo cliente",
+        }),
+      })
+      if (data.result?.status === "autorizada") {
+        showMsg("Nota de estorno emitida com sucesso!")
+      } else {
+        showMsg("Estorno criado: " + (data.result?.status || "pendente"))
+      }
+      setShowEstornoModal(false)
+      setEstornoNfe(null)
+      await loadNotas()
+      await loadStats()
+    } catch (e: any) {
+      showMsg("Erro ao emitir estorno: " + e.message)
+    }
+    setEstornoLoading(false)
+  }
+
   /* ===== FILTRO LOCAL ===== */
   const filteredNotas = notas
 
@@ -453,6 +493,14 @@ export default function NotasFiscaisPage() {
                         >
                           {actionLoading === nfe.id + "_consult" ? "..." : "Consultar"}
                         </button>
+                        {status === "autorizada" && (
+                          <button
+                            onClick={() => handleEstorno(nfe)}
+                            className="px-2 py-1 bg-orange-600 text-white rounded text-xs font-medium hover:bg-orange-700"
+                          >
+                            Estorno
+                          </button>
+                        )}
                         {(status !== "cancelada") && (
                           <button
                             onClick={() => handleCancelar(nfe.id)}
@@ -571,6 +619,36 @@ export default function NotasFiscaisPage() {
                 {entradaLoading ? "Registrando..." : "Registrar Entrada"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* MODAL ESTORNO / DEVOLUCAO */}
+      {showEstornoModal && estornoNfe && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setShowEstornoModal(false)}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold">Nota de Estorno / Devolucao</h3>
+              <button onClick={() => setShowEstornoModal(false)} className="text-zinc-400 hover:text-zinc-600 text-xl">&times;</button>
+            </div>
+            <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-4 text-sm">
+              <p><strong>NFe Original:</strong> Numero {estornoNfe.numero}, Serie {estornoNfe.serie}</p>
+              <p><strong>Cliente:</strong> {estornoNfe.customer_name || "---"}</p>
+              <p><strong>Valor:</strong> {estornoNfe.valor_total ? `R$ ${(estornoNfe.valor_total / 100).toFixed(2)}` : "---"}</p>
+              <p><strong>Chave:</strong> <span className="font-mono text-xs break-all">{estornoNfe.chave_acesso || "---"}</span></p>
+            </div>
+            <div className="bg-zinc-50 rounded-lg p-3 mb-4 text-xs text-zinc-600">
+              <p><strong>CFOP:</strong> 1.202 - Devolucao de compra para comercializacao</p>
+              <p><strong>Serie:</strong> 4 (Saida)</p>
+              <p><strong>Natureza:</strong> Devolucao de mercadoria adquirida</p>
+              <p className="mt-1">A nota de estorno sera emitida referenciando a NFe original.</p>
+            </div>
+            <button
+              onClick={submitEstorno}
+              disabled={estornoLoading}
+              className="w-full px-4 py-2.5 bg-orange-600 text-white rounded-lg text-sm font-bold hover:bg-orange-700 disabled:opacity-50"
+            >
+              {estornoLoading ? "Emitindo Estorno..." : "Emitir Nota de Estorno"}
+            </button>
           </div>
         </div>
       )}
