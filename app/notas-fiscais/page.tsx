@@ -623,10 +623,7 @@ function generateDanfeSimplificadaHtml(nfe: any): string {
     <div class="row"><span class="label">Valor:</span> <span>${nfe.valor ? (nfe.valor / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" }) : "\u2014"}</span></div>
     <div class="row"><span class="label">Data:</span> <span>${nfe.data_emissao ? new Date(nfe.data_emissao).toLocaleDateString("pt-BR") : new Date().toLocaleDateString("pt-BR")}</span></div>
   </div>
-  ${items.length > 0 ? \`<table>
-    <tr><th>Produto</th><th>Qtd</th></tr>
-    \${items.map((i: any) => \`<tr><td>\${i.descricao || i.product_title || i.nome || "---"}</td><td style="text-align:center">\${i.quantidade || i.quantity || 1}</td></tr>\`).join("")}
-  </table>\` : ""}
+  ${items.length > 0 ? "<table><tr><th>Produto</th><th>Qtd</th></tr>" + items.map((i: any) => "<tr><td>" + (i.descricao || i.product_title || i.nome || "---") + "</td><td style='text-align:center'>" + (i.quantidade || i.quantity || 1) + "</td></tr>").join("") + "</table>" : ""}
   <div class="bc-wrap">
     <canvas id="bc-nf"></canvas>
     <div class="bc-text">${nfe.numero || "---"}</div>
