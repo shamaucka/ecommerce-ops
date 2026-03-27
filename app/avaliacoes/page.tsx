@@ -49,20 +49,25 @@ export default function AvaliacoesPage() {
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<"pending" | "approved">("pending")
   const [message, setMessage] = useState("")
+  const [page, setPage] = useState(1)
+  const [totalReviews, setTotalReviews] = useState(0)
+  const PER_PAGE = 50
+  const totalPages = Math.ceil(totalReviews / PER_PAGE)
 
   const loadReviews = useCallback(async () => {
     setLoading(true)
     try {
       const endpoint = tab === "pending"
         ? "/admin/reviews?action=pending"
-        : "/admin/reviews?action=list&approved=true"
+        : `/admin/reviews?action=list&approved=true&page=${page}&limit=${PER_PAGE}`
       const data = await api(endpoint)
-      setReviews(data.reviews || [])
+      setReviews(data.reviews?.reviews || data.reviews || [])
+      setTotalReviews(data.reviews?.total || data.total || data.reviews?.length || 0)
     } catch (e: any) {
       console.error(e)
     }
     setLoading(false)
-  }, [tab])
+  }, [tab, page])
 
   useEffect(() => { loadReviews() }, [loadReviews])
 
@@ -160,6 +165,40 @@ export default function AvaliacoesPage() {
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* PAGINACAO */}
+      {tab === "approved" && totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-6">
+          <button
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            className="px-3 py-1.5 border rounded-lg text-sm disabled:opacity-30 hover:bg-zinc-50"
+          >
+            &larr;
+          </button>
+          {Array.from({ length: Math.min(totalPages, 10) }, (_, i) => {
+            const p = i + 1
+            return (
+              <button
+                key={p}
+                onClick={() => setPage(p)}
+                className={`px-3 py-1.5 border rounded-lg text-sm font-medium ${page === p ? "bg-zinc-900 text-white border-zinc-900" : "hover:bg-zinc-50"}`}
+              >
+                {p}
+              </button>
+            )
+          })}
+          {totalPages > 10 && <span className="text-zinc-400 text-sm">...</span>}
+          <button
+            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages}
+            className="px-3 py-1.5 border rounded-lg text-sm disabled:opacity-30 hover:bg-zinc-50"
+          >
+            &rarr;
+          </button>
+          <span className="text-xs text-zinc-400 ml-2">Pagina {page} de {totalPages} ({totalReviews} avaliacoes)</span>
         </div>
       )}
     </div>
