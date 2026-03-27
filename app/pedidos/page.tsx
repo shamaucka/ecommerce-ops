@@ -243,13 +243,21 @@ function OrderRow({
               <div>
                 <h4 className="text-xs font-bold text-zinc-500 uppercase mb-2">Cliente</h4>
                 <div className="text-sm space-y-1">
-                  <p>{order.customer?.first_name} {order.customer?.last_name}</p>
-                  <p className="text-zinc-500">{order.email}</p>
-                  <p className="text-zinc-500">{order.customer?.phone || "---"}</p>
+                  <p className="font-medium">{order.customer_name || order.customer?.first_name + " " + (order.customer?.last_name || "")}</p>
+                  <p className="text-zinc-500">{order.customer_email || order.email}</p>
+                  <p className="text-zinc-500">{order.customer_phone || order.metadata?.phone || "---"}</p>
+                  <p className="text-zinc-400 text-xs">CPF: {order.customer_cpf || order.metadata?.cpf || "---"}</p>
                 </div>
                 <h4 className="text-xs font-bold text-zinc-500 uppercase mb-2 mt-4">Endereco de Entrega</h4>
-                <div className="text-sm text-zinc-500">
-                  {order.shipping_address ? (
+                <div className="text-sm text-zinc-500 space-y-0.5">
+                  {order.shipping_address_line1 ? (
+                    <>
+                      <p>{order.shipping_address_line1}</p>
+                      {order.shipping_address_line2 && <p>{order.shipping_address_line2}</p>}
+                      <p>{order.shipping_neighborhood && order.shipping_neighborhood + " — "}{order.shipping_city} - {order.shipping_state}</p>
+                      <p>CEP: {order.shipping_postal_code}</p>
+                    </>
+                  ) : order.shipping_address ? (
                     <>
                       <p>{order.shipping_address.address_1}</p>
                       {order.shipping_address.address_2 && <p>{order.shipping_address.address_2}</p>}
