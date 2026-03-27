@@ -230,7 +230,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR">
-      <body className="flex bg-zinc-50 text-zinc-900 min-h-screen">
+      <body className="flex bg-zinc-50 text-zinc-900 min-h-screen" style={{ fontFamily: "'Maison', sans-serif" }}>
         <Sidebar />
         <main className="flex-1 ml-64 p-8 overflow-auto min-h-screen">{children}</main>
       </body>
