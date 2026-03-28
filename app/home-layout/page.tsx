@@ -133,8 +133,8 @@ export default function HomeLayoutPage() {
         </div>
         <div className="flex gap-3">
           <button onClick={() => add("banner")} className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700">+ Banner</button>
-          <button onClick={() => add("vitrine")} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">+ Vitrine</button>
-          <button onClick={save} disabled={saving} className="px-6 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50">
+          <button onClick={() => add("vitrine")} className="px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800">+ Vitrine</button>
+          <button onClick={save} disabled={saving} className="px-6 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800 disabled:opacity-50">
             {saving ? "Salvando..." : "Salvar Layout"}
           </button>
         </div>
@@ -239,7 +239,7 @@ function UploadField(props: { label: string; value: string; onChange: (v: string
           placeholder="URL da imagem"
           className="flex-1 px-3 py-2 border rounded-lg text-sm"
         />
-        <label className={busy ? "px-3 py-2 rounded-lg text-sm font-medium bg-zinc-200 text-zinc-500 cursor-wait" : "px-3 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"}>
+        <label className={busy ? "px-3 py-2 rounded-lg text-sm font-medium bg-zinc-200 text-zinc-500 cursor-wait" : "px-3 py-2 rounded-lg text-sm font-medium bg-zinc-900 text-white hover:bg-zinc-800 cursor-pointer"}>
           {busy ? "..." : "Upload"}
           <input
             type="file"

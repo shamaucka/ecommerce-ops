@@ -50,7 +50,7 @@ function FField({ label, field, placeholder, type = "text", span = 1, value, onC
         value={value ?? ""}
         onChange={(e) => onChange(field, type === "number" ? (e.target.value ? Number(e.target.value) : null) : e.target.value)}
         placeholder={placeholder}
-        className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
       />
     </div>
   )
@@ -65,7 +65,7 @@ function FSel({ label, field, options, span = 1, value, onChange }: {
       <select
         value={value ?? ""}
         onChange={(e) => onChange(field, e.target.value)}
-        className="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-zinc-500"
       >
         <option value="">Selecione...</option>
         {options.map((o) => {
@@ -124,7 +124,7 @@ export default function FiscalLojaPage() {
         <button
           onClick={save}
           disabled={saving}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 disabled:opacity-50"
+          className="px-6 py-2 bg-zinc-900 text-white rounded-lg text-sm font-bold hover:bg-zinc-800 disabled:opacity-50"
         >
           {saving ? "Salvando..." : "Salvar Configuracao"}
         </button>
@@ -225,7 +225,7 @@ export default function FiscalLojaPage() {
               <textarea
                 value={config.info_complementar ?? ""}
                 onChange={(e) => u("info_complementar", e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
                 rows={3}
                 placeholder="Documento emitido por ME ou EPP optante pelo Simples Nacional..."
               />
@@ -288,7 +288,7 @@ export default function FiscalLojaPage() {
                   value={config.certificado_senha ?? ""}
                   onChange={(e) => u("certificado_senha", e.target.value)}
                   placeholder="Senha do .pfx"
-                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
                 />
               </div>
             </div>
@@ -321,7 +321,7 @@ export default function FiscalLojaPage() {
                       setMessage("Erro ao verificar SEFAZ")
                     }
                   }}
-                  className="w-full px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700"
+                  className="w-full px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800"
                 >
                   Testar Conexao SEFAZ
                 </button>

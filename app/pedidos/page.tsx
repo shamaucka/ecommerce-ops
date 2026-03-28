@@ -201,7 +201,7 @@ function CreateOrderModal({ onClose, onCreated }: { onClose: () => void; onCreat
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 placeholder="Maria da Silva"
-                className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -212,7 +212,7 @@ function CreateOrderModal({ onClose, onCreated }: { onClose: () => void; onCreat
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="maria@email.com"
-                  className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
                 />
               </div>
               <div>
@@ -222,7 +222,7 @@ function CreateOrderModal({ onClose, onCreated }: { onClose: () => void; onCreat
                   value={cpf}
                   onChange={(e) => setCpf(e.target.value)}
                   placeholder="000.000.000-00"
-                  className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
                 />
               </div>
             </div>
@@ -238,7 +238,7 @@ function CreateOrderModal({ onClose, onCreated }: { onClose: () => void; onCreat
                     onChange={(e) => setEnd("cep", e.target.value)}
                     onBlur={(e) => fetchCep(e.target.value)}
                     placeholder="00000-000"
-                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
                   />
                 </div>
                 <div className="col-span-2">
@@ -248,7 +248,7 @@ function CreateOrderModal({ onClose, onCreated }: { onClose: () => void; onCreat
                     value={endereco.logradouro}
                     onChange={(e) => setEnd("logradouro", e.target.value)}
                     placeholder="Rua, Av., etc."
-                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
                   />
                 </div>
               </div>
@@ -260,7 +260,7 @@ function CreateOrderModal({ onClose, onCreated }: { onClose: () => void; onCreat
                     value={endereco.complemento}
                     onChange={(e) => setEnd("complemento", e.target.value)}
                     placeholder="Apto, Bloco..."
-                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
                   />
                 </div>
                 <div>
@@ -270,7 +270,7 @@ function CreateOrderModal({ onClose, onCreated }: { onClose: () => void; onCreat
                     value={endereco.bairro}
                     onChange={(e) => setEnd("bairro", e.target.value)}
                     placeholder="Bairro"
-                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
                   />
                 </div>
               </div>
@@ -282,7 +282,7 @@ function CreateOrderModal({ onClose, onCreated }: { onClose: () => void; onCreat
                     value={endereco.cidade}
                     onChange={(e) => setEnd("cidade", e.target.value)}
                     placeholder="Cidade"
-                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
                   />
                 </div>
                 <div>
@@ -293,7 +293,7 @@ function CreateOrderModal({ onClose, onCreated }: { onClose: () => void; onCreat
                     onChange={(e) => setEnd("estado", e.target.value)}
                     placeholder="SP"
                     maxLength={2}
-                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
+                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500 uppercase"
                   />
                 </div>
               </div>
@@ -311,7 +311,7 @@ function CreateOrderModal({ onClose, onCreated }: { onClose: () => void; onCreat
                 onFocus={() => setShowDropdown(true)}
                 placeholder={loadingProducts ? "Carregando produtos..." : "Buscar produto por nome ou SKU..."}
                 disabled={loadingProducts}
-                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-zinc-100"
+                className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500 disabled:bg-zinc-100"
               />
               {showDropdown && filtered.length > 0 && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-white border rounded-xl shadow-lg z-10 max-h-64 overflow-y-auto">
@@ -356,7 +356,7 @@ function CreateOrderModal({ onClose, onCreated }: { onClose: () => void; onCreat
                       min={1}
                       value={item.qtde}
                       onChange={(e) => updateItem(item.sku, "qtde", Math.max(1, parseInt(e.target.value) || 1))}
-                      className="w-12 border rounded px-2 py-1 text-xs text-center focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-12 border rounded px-2 py-1 text-xs text-center focus:outline-none focus:ring-1 focus:ring-zinc-500"
                     />
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
@@ -366,7 +366,7 @@ function CreateOrderModal({ onClose, onCreated }: { onClose: () => void; onCreat
                       min={0}
                       value={(item.valor / 100).toFixed(2)}
                       onChange={(e) => updateItem(item.sku, "valor", Math.round((parseFloat(e.target.value) || 0) * 100))}
-                      className="w-20 border rounded px-2 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-20 border rounded px-2 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-zinc-500"
                     />
                   </div>
                   <p className="text-sm font-medium w-20 text-right shrink-0">{formatBRL(item.qtde * item.valor)}</p>
@@ -385,7 +385,7 @@ function CreateOrderModal({ onClose, onCreated }: { onClose: () => void; onCreat
           <button
             onClick={handleSubmit}
             disabled={submitting}
-            className="w-full bg-blue-600 text-white rounded-xl py-3 text-sm font-bold uppercase tracking-wider hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="w-full bg-zinc-900 text-white rounded-xl py-3 text-sm font-bold uppercase tracking-wider hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {submitting ? "Criando pedido..." : "Criar Pedido"}
           </button>
@@ -472,7 +472,7 @@ export default function PedidosPage() {
         <div className="flex gap-2">
           <button
             onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800 transition-colors"
           >
             + Criar Pedido
           </button>
@@ -626,7 +626,7 @@ function OrderRow({
                 <h4 className="text-xs font-bold text-zinc-500 uppercase mb-2">Acoes</h4>
                 <div className="space-y-2">
                   {status === "pending" && (
-                    <button onClick={(e) => { e.stopPropagation(); onUpdateStatus(order.id, "processing") }} className="w-full px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+                    <button onClick={(e) => { e.stopPropagation(); onUpdateStatus(order.id, "processing") }} className="w-full px-3 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800">
                       Marcar como Pago
                     </button>
                   )}
@@ -638,18 +638,18 @@ function OrderRow({
                         value={trackingInput}
                         onChange={(e) => setTrackingInput(e.target.value)}
                         onClick={(e) => e.stopPropagation()}
-                        className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
                       />
                       <button
                         onClick={(e) => { e.stopPropagation(); onUpdateStatus(order.id, "shipped", trackingInput) }}
-                        className="w-full px-3 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700"
+                        className="w-full px-3 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800"
                       >
                         Marcar como Enviado
                       </button>
                     </div>
                   )}
                   {status === "shipped" && (
-                    <button onClick={(e) => { e.stopPropagation(); onUpdateStatus(order.id, "delivered") }} className="w-full px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700">
+                    <button onClick={(e) => { e.stopPropagation(); onUpdateStatus(order.id, "delivered") }} className="w-full px-3 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800">
                       Marcar como Entregue
                     </button>
                   )}

@@ -259,7 +259,7 @@ export default function ConferenciaPage() {
             <button
               onClick={scanOrder}
               disabled={loading}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50"
+              className="px-6 py-3 bg-zinc-900 text-white rounded-lg font-medium hover:bg-zinc-800 disabled:opacity-50"
             >
               {loading ? "..." : "Buscar"}
             </button>
@@ -311,7 +311,7 @@ export default function ConferenciaPage() {
                 />
                 <button
                   onClick={() => checkItem(itemInput)}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+                  className="px-6 py-3 bg-zinc-900 text-white rounded-lg font-medium hover:bg-zinc-800"
                 >
                   Conferir
                 </button>
@@ -333,13 +333,13 @@ export default function ConferenciaPage() {
                   <div className="flex gap-3 justify-center">
                     <button
                       onClick={printDanfe}
-                      className="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+                      className="px-5 py-2.5 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800"
                     >
                       Imprimir DANFE Simplificada
                     </button>
                     <button
                       onClick={printEtiqueta}
-                      className="px-5 py-2.5 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700"
+                      className="px-5 py-2.5 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800"
                     >
                       Imprimir Etiqueta Transportadora
                     </button>

@@ -306,7 +306,7 @@ export default function DespachoPage() {
               />
               <button
                 onClick={createRomaneio}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+                className="px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800"
               >
                 Criar
               </button>
@@ -435,7 +435,7 @@ export default function DespachoPage() {
               />
               <button
                 onClick={addToRomaneio}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700"
+                className="px-6 py-3 bg-zinc-900 text-white rounded-lg font-medium hover:bg-zinc-800"
               >
                 Adicionar
               </button>

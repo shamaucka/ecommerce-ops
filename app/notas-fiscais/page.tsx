@@ -358,11 +358,11 @@ export default function NotasFiscaisPage() {
         </div>
         <div className="flex gap-2">
           {serieTab === "3" ? (
-            <button onClick={openEmitModal} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+            <button onClick={openEmitModal} className="px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800">
               Emitir NFe Saida
             </button>
           ) : (
-            <button onClick={() => setShowEntradaModal(true)} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+            <button onClick={() => setShowEntradaModal(true)} className="px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800">
               Nova Entrada
             </button>
           )}
@@ -408,7 +408,7 @@ export default function NotasFiscaisPage() {
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
         >
           {STATUS_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -420,7 +420,7 @@ export default function NotasFiscaisPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter") loadNotas() }}
-          className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
+          className="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500 w-64"
         />
         <button onClick={loadNotas} className="px-3 py-2 bg-zinc-200 rounded-lg text-sm font-medium hover:bg-zinc-300">
           Buscar
@@ -464,7 +464,7 @@ export default function NotasFiscaisPage() {
                         <button
                           onClick={() => handleDanfe(nfe.id)}
                           disabled={actionLoading === nfe.id + "_danfe"}
-                          className="px-2 py-1 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 disabled:opacity-50"
+                          className="px-2 py-1 bg-zinc-900 text-white rounded text-xs font-medium hover:bg-zinc-800 disabled:opacity-50"
                         >
                           {actionLoading === nfe.id + "_danfe" ? "..." : "DANFE"}
                         </button>
@@ -480,7 +480,7 @@ export default function NotasFiscaisPage() {
                             <button
                               onClick={() => handleEtiqueta(nfe)}
                               disabled={actionLoading === nfe.id + "_etiqueta"}
-                              className="px-2 py-1 bg-purple-600 text-white rounded text-xs font-medium hover:bg-purple-700 disabled:opacity-50"
+                              className="px-2 py-1 bg-zinc-900 text-white rounded text-xs font-medium hover:bg-zinc-800 disabled:opacity-50"
                             >
                               {actionLoading === nfe.id + "_etiqueta" ? "..." : "Etiqueta"}
                             </button>
@@ -559,7 +559,7 @@ export default function NotasFiscaisPage() {
                       <button
                         onClick={() => emitSaida(order.id)}
                         disabled={emitLoading}
-                        className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium hover:bg-blue-700 disabled:opacity-50"
+                        className="px-3 py-1.5 bg-zinc-900 text-white rounded-lg text-xs font-medium hover:bg-zinc-800 disabled:opacity-50"
                       >
                         {emitLoading ? "Emitindo..." : "Emitir NFe"}
                       </button>
@@ -588,7 +588,7 @@ export default function NotasFiscaisPage() {
                   value={entradaForm.chave_acesso}
                   onChange={(e) => setEntradaForm({ ...entradaForm, chave_acesso: e.target.value })}
                   placeholder="44 digitos da chave de acesso"
-                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
                 />
               </div>
               <div>
@@ -598,7 +598,7 @@ export default function NotasFiscaisPage() {
                   value={entradaForm.fornecedor}
                   onChange={(e) => setEntradaForm({ ...entradaForm, fornecedor: e.target.value })}
                   placeholder="Nome do fornecedor"
-                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
                 />
               </div>
               <div>
@@ -608,13 +608,13 @@ export default function NotasFiscaisPage() {
                   value={entradaForm.valor}
                   onChange={(e) => setEntradaForm({ ...entradaForm, valor: e.target.value })}
                   placeholder="0.00"
-                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
                 />
               </div>
               <button
                 onClick={submitEntrada}
                 disabled={entradaLoading}
-                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 mt-2"
+                className="w-full px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800 disabled:opacity-50 mt-2"
               >
                 {entradaLoading ? "Registrando..." : "Registrar Entrada"}
               </button>

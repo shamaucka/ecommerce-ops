@@ -235,7 +235,7 @@ export default function CategoriasPage() {
             <h2 className="text-2xl font-bold">{editingId ? "Editar Categoria" : "Nova Categoria"}</h2>
             {form.slug && <p className="text-zinc-500 text-sm mt-1">/{form.slug}</p>}
           </div>
-          <button onClick={saveCategory} disabled={saving} className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+          <button onClick={saveCategory} disabled={saving} className="px-6 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800 disabled:opacity-50">
             {saving ? "Salvando..." : editingId ? "Salvar Alteracoes" : "Criar Categoria"}
           </button>
         </div>
@@ -252,22 +252,22 @@ export default function CategoriasPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <label className="block text-xs font-semibold text-zinc-600 mb-1">Nome <span className="text-red-500">*</span></label>
-                <input type="text" value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Ex: Quadros Decorativos" className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input type="text" value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Ex: Quadros Decorativos" className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-zinc-600 mb-1">Slug / URL</label>
-                <input type="text" value={form.slug} onChange={(e) => update("slug", e.target.value)} placeholder="quadros-decorativos" className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input type="text" value={form.slug} onChange={(e) => update("slug", e.target.value)} placeholder="quadros-decorativos" className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-zinc-600 mb-1">Categoria Pai</label>
-                <select value={form.parent_id} onChange={(e) => update("parent_id", e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select value={form.parent_id} onChange={(e) => update("parent_id", e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-zinc-500">
                   <option value="">Nenhuma (raiz)</option>
                   {parentOptions.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
               <div className="col-span-2">
                 <label className="block text-xs font-semibold text-zinc-600 mb-1">Descricao</label>
-                <textarea value={form.description} onChange={(e) => update("description", e.target.value)} placeholder="Descricao da categoria..." className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" rows={4} />
+                <textarea value={form.description} onChange={(e) => update("description", e.target.value)} placeholder="Descricao da categoria..." className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500" rows={4} />
               </div>
               <div className="col-span-2">
                 <label className="block text-xs font-semibold text-zinc-600 mb-2">Imagem da Categoria</label>
@@ -308,14 +308,14 @@ export default function CategoriasPage() {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-zinc-600 mb-1">Posicao</label>
-                <input type="number" value={form.position} onChange={(e) => update("position", e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input type="number" value={form.position} onChange={(e) => update("position", e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500" />
               </div>
               <div className="col-span-2 flex items-center gap-3">
                 <label className="text-xs font-semibold text-zinc-600">Ativa</label>
                 <button
                   type="button"
                   onClick={() => update("active", !form.active)}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${form.active ? "bg-blue-600" : "bg-zinc-300"}`}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${form.active ? "bg-zinc-900" : "bg-zinc-300"}`}
                 >
                   <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.active ? "translate-x-6" : ""}`} />
                 </button>
@@ -329,11 +329,11 @@ export default function CategoriasPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-zinc-600 mb-1">Titulo SEO</label>
-                <input type="text" value={form.seo_title} onChange={(e) => update("seo_title", e.target.value)} placeholder="Titulo para motores de busca" className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input type="text" value={form.seo_title} onChange={(e) => update("seo_title", e.target.value)} placeholder="Titulo para motores de busca" className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-zinc-600 mb-1">Descricao SEO</label>
-                <textarea value={form.seo_description} onChange={(e) => update("seo_description", e.target.value)} placeholder="Meta description para SEO..." className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" rows={3} maxLength={160} />
+                <textarea value={form.seo_description} onChange={(e) => update("seo_description", e.target.value)} placeholder="Meta description para SEO..." className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500" rows={3} maxLength={160} />
                 <p className="text-xs text-zinc-400 mt-1">{form.seo_description.length}/160 caracteres</p>
               </div>
             </div>
@@ -355,7 +355,7 @@ export default function CategoriasPage() {
         </div>
         <div className="flex gap-3">
           <button onClick={loadCategories} className="px-4 py-2 bg-zinc-200 rounded-lg text-sm font-medium hover:bg-zinc-300">Atualizar</button>
-          <button onClick={openCreate} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">+ Nova Categoria</button>
+          <button onClick={openCreate} className="px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800">+ Nova Categoria</button>
         </div>
       </div>
 
@@ -410,7 +410,7 @@ export default function CategoriasPage() {
                   </td>
                   <td className="p-3 text-center">
                     <div className="flex items-center justify-center gap-1">
-                      <button onClick={() => openEdit(cat)} className="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700">Editar</button>
+                      <button onClick={() => openEdit(cat)} className="px-2 py-1 bg-zinc-900 text-white rounded text-xs hover:bg-zinc-800">Editar</button>
                       <button onClick={() => deleteCategory(cat.id, cat.name)} className="px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700">Excluir</button>
                     </div>
                   </td>

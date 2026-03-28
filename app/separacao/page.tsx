@@ -137,7 +137,7 @@ export default function SeparacaoPage() {
           <button
             onClick={printPickingList}
             disabled={selected.size === 0 || printing}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {printing
               ? "Gerando..."
@@ -154,7 +154,7 @@ export default function SeparacaoPage() {
           onClick={() => setFilter("aguardando")}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
             filter === "aguardando"
-              ? "bg-blue-600 text-white"
+              ? "bg-zinc-900 text-white"
               : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
           }`}
         >

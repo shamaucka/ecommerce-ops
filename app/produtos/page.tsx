@@ -425,7 +425,7 @@ export default function ProdutosPage() {
           <button onClick={loadProducts} className="px-4 py-2 bg-zinc-200 rounded-lg text-sm font-medium hover:bg-zinc-300">
             Atualizar
           </button>
-          <button onClick={openCreate} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+          <button onClick={openCreate} className="px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800">
             + Novo Produto
           </button>
         </div>
@@ -446,12 +446,12 @@ export default function ProdutosPage() {
           placeholder="Buscar por nome, slug ou SKU..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 min-w-[200px] max-w-md px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 min-w-[200px] max-w-md px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
         />
         <select
           value={statusFilter}
           onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-zinc-500"
         >
           <option value="">Todos os status</option>
           {STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
@@ -459,7 +459,7 @@ export default function ProdutosPage() {
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-zinc-500"
         >
           <option value="">Todas categorias</option>
           {allCategories.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -467,7 +467,7 @@ export default function ProdutosPage() {
         <select
           value={issueFilter}
           onChange={(e) => setIssueFilter(e.target.value)}
-          className="px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-zinc-500"
         >
           <option value="">Sem filtro de erro</option>
           <option value="sem_preco">Sem preco</option>
@@ -532,7 +532,7 @@ export default function ProdutosPage() {
                       <div className="flex items-center justify-center gap-1">
                         <button
                           onClick={() => openEdit(product)}
-                          className="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
+                          className="px-2 py-1 bg-zinc-900 text-white rounded text-xs hover:bg-zinc-800"
                           title="Editar"
                         >
                           Editar
@@ -580,7 +580,7 @@ export default function ProdutosPage() {
               else if (page >= totalPages - 2) p = totalPages - 4 + i
               else p = page - 2 + i
               return (
-                <button key={p} onClick={() => setPage(p)} className={`px-3 py-1 rounded text-sm border ${page === p ? "bg-blue-600 text-white border-blue-600" : "hover:bg-zinc-100"}`}>{p}</button>
+                <button key={p} onClick={() => setPage(p)} className={`px-3 py-1 rounded text-sm border ${page === p ? "bg-zinc-900 text-white border-blue-600" : "hover:bg-zinc-100"}`}>{p}</button>
               )
             })}
             <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="px-3 py-1 rounded text-sm border disabled:opacity-30 hover:bg-zinc-100">&rsaquo;</button>
@@ -660,7 +660,7 @@ function ProdInput({ label, field, placeholder, type = "text", required = false,
         onChange={(e) => onChange(field, e.target.value)}
         placeholder={placeholder}
         disabled={disabled}
-        className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-zinc-100"
+        className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500 disabled:bg-zinc-100"
       />
     </div>
   )
@@ -719,7 +719,7 @@ function ProductFormView({
         <button
           onClick={onSave}
           disabled={saving}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+          className="px-6 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800 disabled:opacity-50"
         >
           {saving ? "Salvando..." : isEdit ? "Salvar Alteracoes" : "Criar Produto"}
         </button>
@@ -747,7 +747,7 @@ function ProductFormView({
                 value={form.description}
                 onChange={(e) => update("description", e.target.value)}
                 placeholder="Descreva o produto com beneficios, materiais, diferenciais..."
-                className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
                 rows={6}
               />
             </div>
@@ -772,7 +772,7 @@ function ProductFormView({
               <select
                 value={form.category}
                 onChange={(e) => update("category", e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-zinc-500"
               >
                 <option value="">Selecione...</option>
                 {CATEGORIAS.map((c) => <option key={c} value={c}>{c}</option>)}
@@ -783,7 +783,7 @@ function ProductFormView({
               <select
                 value={form.status}
                 onChange={(e) => update("status", e.target.value)}
-                className="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-zinc-500"
               >
                 {STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
@@ -831,7 +831,7 @@ function ProductFormView({
                 value={form.seo_description}
                 onChange={(e) => update("seo_description", e.target.value)}
                 placeholder="Quadro decorativo em canvas de alta qualidade. Pronto para pendurar, nunca desbota. Frete gratis..."
-                className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500"
                 rows={3}
                 maxLength={160}
               />

@@ -228,7 +228,7 @@ export default function PromocoesPage() {
 
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold">{editingId ? "Editar Promocao" : "Nova Promocao"}</h2>
-          <button onClick={savePromotion} disabled={saving} className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50">
+          <button onClick={savePromotion} disabled={saving} className="px-6 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800 disabled:opacity-50">
             {saving ? "Salvando..." : editingId ? "Salvar Alteracoes" : "Criar Promocao"}
           </button>
         </div>
@@ -245,18 +245,18 @@ export default function PromocoesPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="col-span-2">
                 <label className="block text-xs font-semibold text-zinc-600 mb-1">Nome <span className="text-red-500">*</span></label>
-                <input type="text" value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Ex: Black Friday 2026" className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input type="text" value={form.name} onChange={(e) => update("name", e.target.value)} placeholder="Ex: Black Friday 2026" className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-zinc-600 mb-1">Tipo</label>
-                <select value={form.type} onChange={(e) => update("type", e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select value={form.type} onChange={(e) => update("type", e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-zinc-500">
                   <option value="cupom">Cupom</option>
                   <option value="regra">Regra Automatica</option>
                 </select>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-zinc-600 mb-1">Codigo do Cupom</label>
-                <input type="text" value={form.code} onChange={(e) => update("code", e.target.value.toUpperCase())} placeholder="DESCONTO10" className="w-full px-3 py-2 border rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input type="text" value={form.code} onChange={(e) => update("code", e.target.value.toUpperCase())} placeholder="DESCONTO10" className="w-full px-3 py-2 border rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-zinc-500" />
               </div>
             </div>
           </section>
@@ -266,18 +266,18 @@ export default function PromocoesPage() {
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-zinc-600 mb-1">Tipo de Desconto</label>
-                <select value={form.discount_type} onChange={(e) => update("discount_type", e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select value={form.discount_type} onChange={(e) => update("discount_type", e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-zinc-500">
                   <option value="percentual">Percentual (%)</option>
                   <option value="fixo">Fixo (R$)</option>
                 </select>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-zinc-600 mb-1">Valor do Desconto <span className="text-red-500">*</span></label>
-                <input type="number" value={form.discount_value} onChange={(e) => update("discount_value", e.target.value)} placeholder={form.discount_type === "percentual" ? "10" : "50.00"} className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input type="number" value={form.discount_value} onChange={(e) => update("discount_value", e.target.value)} placeholder={form.discount_type === "percentual" ? "10" : "50.00"} className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-zinc-600 mb-1">Compra Minima (R$)</label>
-                <input type="number" value={form.min_purchase} onChange={(e) => update("min_purchase", e.target.value)} placeholder="100.00" className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input type="number" value={form.min_purchase} onChange={(e) => update("min_purchase", e.target.value)} placeholder="100.00" className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500" />
               </div>
             </div>
           </section>
@@ -287,18 +287,18 @@ export default function PromocoesPage() {
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-zinc-600 mb-1">Categoria</label>
-                <select value={form.category} onChange={(e) => update("category", e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select value={form.category} onChange={(e) => update("category", e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-zinc-500">
                   <option value="">Todas</option>
                   {categories.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
               <div>
                 <label className="block text-xs font-semibold text-zinc-600 mb-1">Itens Minimos</label>
-                <input type="number" value={form.min_items} onChange={(e) => update("min_items", e.target.value)} placeholder="1" className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input type="number" value={form.min_items} onChange={(e) => update("min_items", e.target.value)} placeholder="1" className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-zinc-600 mb-1">Usos Maximos</label>
-                <input type="number" value={form.max_uses} onChange={(e) => update("max_uses", e.target.value)} placeholder="100" className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input type="number" value={form.max_uses} onChange={(e) => update("max_uses", e.target.value)} placeholder="100" className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500" />
               </div>
             </div>
           </section>
@@ -308,18 +308,18 @@ export default function PromocoesPage() {
             <div className="grid grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-zinc-600 mb-1">Valido de</label>
-                <input type="date" value={form.valid_from} onChange={(e) => update("valid_from", e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input type="date" value={form.valid_from} onChange={(e) => update("valid_from", e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-zinc-600 mb-1">Valido ate</label>
-                <input type="date" value={form.valid_until} onChange={(e) => update("valid_until", e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <input type="date" value={form.valid_until} onChange={(e) => update("valid_until", e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500" />
               </div>
               <div className="flex items-end gap-3 pb-1">
                 <label className="text-xs font-semibold text-zinc-600">Ativa</label>
                 <button
                   type="button"
                   onClick={() => update("active", !form.active)}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${form.active ? "bg-blue-600" : "bg-zinc-300"}`}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${form.active ? "bg-zinc-900" : "bg-zinc-300"}`}
                 >
                   <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.active ? "translate-x-6" : ""}`} />
                 </button>
@@ -342,7 +342,7 @@ export default function PromocoesPage() {
         </div>
         <div className="flex gap-3">
           <button onClick={loadData} className="px-4 py-2 bg-zinc-200 rounded-lg text-sm font-medium hover:bg-zinc-300">Atualizar</button>
-          <button onClick={openCreate} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">+ Nova Promocao</button>
+          <button onClick={openCreate} className="px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800">+ Nova Promocao</button>
         </div>
       </div>
 
@@ -434,7 +434,7 @@ export default function PromocoesPage() {
                     </td>
                     <td className="p-3 text-center">
                       <div className="flex items-center justify-center gap-1">
-                        <button onClick={() => openEdit(promo)} className="px-2 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700">Editar</button>
+                        <button onClick={() => openEdit(promo)} className="px-2 py-1 bg-zinc-900 text-white rounded text-xs hover:bg-zinc-800">Editar</button>
                         <button onClick={() => deletePromotion(promo.id, promo.name)} className="px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700">Excluir</button>
                       </div>
                     </td>

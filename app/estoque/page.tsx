@@ -175,7 +175,7 @@ export default function EstoquePage() {
           <div className="flex gap-4 mb-4">
             <input type="text" placeholder="Buscar por nome ou SKU..." value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 max-w-md px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              className="flex-1 max-w-md px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-500" />
             <button onClick={load} className="px-4 py-2 bg-zinc-200 rounded-lg text-sm font-medium hover:bg-zinc-300">Atualizar</button>
           </div>
           <div className="bg-white rounded-xl shadow overflow-hidden">
@@ -219,7 +219,7 @@ export default function EstoquePage() {
                       <td className="p-3 text-center">
                         <div className="flex gap-1 justify-center">
                           <button onClick={() => openModal("entrada", product)}
-                            className="px-2 py-1 bg-green-600 text-white rounded text-xs font-medium hover:bg-green-700">
+                            className="px-2 py-1 bg-zinc-900 text-white rounded text-xs font-medium hover:bg-zinc-800">
                             +Entrada
                           </button>
                           <button onClick={() => openModal("saida", product)} disabled={qty === 0}
@@ -292,7 +292,7 @@ export default function EstoquePage() {
         <>
           <div className="flex justify-end mb-4">
             <button onClick={() => setShowLocForm(!showLocForm)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+              className="px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800">
               {showLocForm ? "Cancelar" : "Nova Localizacao"}
             </button>
           </div>
@@ -322,7 +322,7 @@ export default function EstoquePage() {
                     className="w-full px-3 py-2 border rounded-lg text-sm" />
                 </div>
               </div>
-              <button onClick={createLocation} className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700">
+              <button onClick={createLocation} className="mt-4 px-6 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800">
                 Criar
               </button>
             </div>
@@ -430,7 +430,7 @@ export default function EstoquePage() {
               </button>
               <button onClick={submitModal} disabled={modalSaving}
                 className={`flex-1 py-2 text-white rounded-lg text-sm font-bold disabled:opacity-50 ${
-                  modal.type === "entrada" ? "bg-green-600 hover:bg-green-700" :
+                  modal.type === "entrada" ? "bg-zinc-900 hover:bg-zinc-800" :
                   modal.type === "saida" ? "bg-red-600 hover:bg-red-700" :
                   "bg-yellow-600 hover:bg-yellow-700"
                 }`}>
