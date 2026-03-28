@@ -68,11 +68,15 @@ interface ProductVariant { id: string; sku: string; title: string; prices: { amo
 interface Product { id: string; title: string; thumbnail?: string; variants: ProductVariant[] }
 interface OrderItem { sku: string; titulo_produto: string; qtde: number; valor: number } // valor em centavos
 
+interface Endereco { cep: string; logradouro: string; complemento: string; bairro: string; cidade: string; estado: string }
+
 /* ===== MODAL CRIAR PEDIDO ===== */
 function CreateOrderModal({ onClose, onCreated }: { onClose: () => void; onCreated: (id: string) => void }) {
   const [nome, setNome] = useState("")
   const [email, setEmail] = useState("")
   const [cpf, setCpf] = useState("")
+  const [endereco, setEndereco] = useState<Endereco>({ cep: "", logradouro: "", complemento: "", bairro: "", cidade: "", estado: "" })
+  const [cepLoading, setCepLoading] = useState(false)
   const [search, setSearch] = useState("")
   const [products, setProducts] = useState<Product[]>([])
   const [loadingProducts, setLoadingProducts] = useState(true)
@@ -81,6 +85,30 @@ function CreateOrderModal({ onClose, onCreated }: { onClose: () => void; onCreat
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
   const searchRef = useRef<HTMLDivElement>(null)
+
+  const setEnd = (field: keyof Endereco, value: string) =>
+    setEndereco((prev) => ({ ...prev, [field]: value }))
+
+  const fetchCep = async (cep: string) => {
+    const digits = cep.replace(/\D/g, "")
+    if (digits.length !== 8) return
+    setCepLoading(true)
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${digits}/json/`)
+      const data = await res.json()
+      if (!data.erro) {
+        setEndereco((prev) => ({
+          ...prev,
+          logradouro: data.logradouro || "",
+          bairro: data.bairro || "",
+          cidade: data.localidade || "",
+          estado: data.uf || "",
+        }))
+      }
+    } catch { /* silently ignore */ } finally {
+      setCepLoading(false)
+    }
+  }
 
   useEffect(() => {
     api("/admin/products?limit=500").then((data) => {
@@ -137,7 +165,7 @@ function CreateOrderModal({ onClose, onCreated }: { onClose: () => void; onCreat
         method: "POST",
         body: JSON.stringify({
           action: "create",
-          cliente: { nome, email, cpf_cnpj: cpf },
+          cliente: { nome, email, cpf_cnpj: cpf, endereco },
           itens: items.map((i) => ({ sku: i.sku, titulo_produto: i.titulo_produto, qtde: i.qtde, valor: i.valor })),
         }),
       })
@@ -196,6 +224,78 @@ function CreateOrderModal({ onClose, onCreated }: { onClose: () => void; onCreat
                   placeholder="000.000.000-00"
                   className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+              </div>
+            </div>
+            {/* ENDERECO */}
+            <div className="pt-2 border-t border-zinc-200 space-y-3">
+              <h4 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Endereco de Entrega</h4>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-zinc-500">CEP</label>
+                  <input
+                    type="text"
+                    value={endereco.cep}
+                    onChange={(e) => setEnd("cep", e.target.value)}
+                    onBlur={(e) => fetchCep(e.target.value)}
+                    placeholder="00000-000"
+                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <label className="text-xs font-medium text-zinc-500">Logradouro {cepLoading && <span className="text-zinc-400">(buscando...)</span>}</label>
+                  <input
+                    type="text"
+                    value={endereco.logradouro}
+                    onChange={(e) => setEnd("logradouro", e.target.value)}
+                    placeholder="Rua, Av., etc."
+                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-zinc-500">Complemento</label>
+                  <input
+                    type="text"
+                    value={endereco.complemento}
+                    onChange={(e) => setEnd("complemento", e.target.value)}
+                    placeholder="Apto, Bloco..."
+                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-zinc-500">Bairro</label>
+                  <input
+                    type="text"
+                    value={endereco.bairro}
+                    onChange={(e) => setEnd("bairro", e.target.value)}
+                    placeholder="Bairro"
+                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="col-span-2">
+                  <label className="text-xs font-medium text-zinc-500">Cidade</label>
+                  <input
+                    type="text"
+                    value={endereco.cidade}
+                    onChange={(e) => setEnd("cidade", e.target.value)}
+                    placeholder="Cidade"
+                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-zinc-500">Estado</label>
+                  <input
+                    type="text"
+                    value={endereco.estado}
+                    onChange={(e) => setEnd("estado", e.target.value)}
+                    placeholder="SP"
+                    maxLength={2}
+                    className="mt-1 w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 uppercase"
+                  />
+                </div>
               </div>
             </div>
           </div>
