@@ -167,12 +167,6 @@ const navGroups: NavGroup[] = [
       { href: "/despacho", label: "Despacho", Icon: IconDespacho },
     ],
   },
-  {
-    label: "Ferramentas",
-    items: [
-      { href: "/teste-cartao", label: "Teste Cartao", Icon: IconCartao },
-    ],
-  },
 ]
 
 /* ===== SIDEBAR ===== */
