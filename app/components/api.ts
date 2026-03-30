@@ -1,31 +1,17 @@
-import { API, ADMIN_EMAIL, ADMIN_PASS } from "../lib/api-url"
+import { API } from "../lib/api-url"
+import { getToken, clearAuth, redirectToLogin } from "../lib/auth-token"
+
 const API_BASE = API + "/admin/fulfillment-ops"
-const AUTH_URL = API + "/auth/user/emailpass"
-
-const ADMIN_PASSWORD = ADMIN_PASS
-
-let cachedToken: string | null = null
-
-async function getToken(): Promise<string> {
-  if (cachedToken) return cachedToken
-
-  const res = await fetch(AUTH_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD }),
-  })
-
-  if (!res.ok) throw new Error("Falha na autenticação")
-  const data = await res.json()
-  cachedToken = data.token
-  return cachedToken!
-}
 
 async function authHeaders(): Promise<Record<string, string>> {
-  const token = await getToken()
+  const token = getToken()
+  if (!token) {
+    redirectToLogin()
+    return {}
+  }
   return {
     "Content-Type": "application/json",
-    "Authorization": `Bearer ${token}`,
+    Authorization: `Bearer ${token}`,
   }
 }
 
@@ -42,15 +28,9 @@ export async function apiGet(action: string, params?: Record<string, string>) {
   const res = await fetch(url.toString(), { headers })
 
   if (res.status === 401) {
-    // Token expirado, renovar
-    cachedToken = null
-    const newHeaders = await authHeaders()
-    const retry = await fetch(url.toString(), { headers: newHeaders })
-    if (!retry.ok) {
-      const err = await retry.json().catch(() => ({ error: retry.statusText }))
-      throw new Error(err.error || retry.statusText)
-    }
-    return retry.json()
+    clearAuth()
+    redirectToLogin()
+    return {}
   }
 
   if (!res.ok) {
@@ -69,18 +49,9 @@ export async function apiPost(action: string, data?: Record<string, any>) {
   })
 
   if (res.status === 401) {
-    cachedToken = null
-    const newHeaders = await authHeaders()
-    const retry = await fetch(API_BASE, {
-      method: "POST",
-      headers: newHeaders,
-      body: JSON.stringify({ action, ...data }),
-    })
-    if (!retry.ok) {
-      const err = await retry.json().catch(() => ({ error: retry.statusText }))
-      throw new Error(err.error || retry.statusText)
-    }
-    return retry.json()
+    clearAuth()
+    redirectToLogin()
+    return {}
   }
 
   if (!res.ok) {

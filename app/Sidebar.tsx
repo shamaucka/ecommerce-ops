@@ -210,8 +210,20 @@ export default function Sidebar() {
           </div>
         ))}
       </nav>
-      <div className="p-4 border-t border-zinc-700 text-xs text-zinc-500">
-        Backend Lojista
+      <div className="p-4 border-t border-zinc-700">
+        <p className="text-xs text-zinc-500 mb-3">Backend Lojista</p>
+        <button
+          onClick={async () => {
+            await fetch("/api/auth/logout", { method: "POST" })
+            window.location.href = "/login"
+          }}
+          className="flex items-center gap-2 text-xs text-zinc-400 hover:text-white transition-colors w-full px-2 py-1.5 rounded hover:bg-zinc-800"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Sair
+        </button>
       </div>
     </aside>
   )

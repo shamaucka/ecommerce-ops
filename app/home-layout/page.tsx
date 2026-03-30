@@ -2,26 +2,17 @@
 
 import { useState, useEffect, useCallback } from "react"
 
-import { API, API_HOST, ADMIN_EMAIL, ADMIN_PASS } from "../lib/api-url"
+import { API, API_HOST } from "../lib/api-url"
+import { getToken, clearAuth, redirectToLogin } from "../lib/auth-token"
 
-let _tc: { token: string; ts: number } | null = null
-async function getToken() {
-  if (_tc && Date.now() - _tc.ts < 300000) return _tc.token
-  const res = await fetch(API + "/auth/user/emailpass", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASS }),
-  })
-  const d = await res.json()
-  _tc = { token: d.token, ts: Date.now() }
-  return d.token
-}
 async function apiFetch(path: string, opts?: RequestInit) {
-  const token = await getToken()
+  const token = getToken()
+  if (!token) { redirectToLogin(); return {} as any }
   const res = await fetch(API + path, {
     ...opts,
     headers: { "Content-Type": "application/json", Authorization: "Bearer " + token, ...opts?.headers },
   })
+  if (res.status === 401) { clearAuth(); redirectToLogin(); return {} as any }
   return res.json()
 }
 

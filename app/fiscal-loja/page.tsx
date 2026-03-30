@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 
-import { API, ADMIN_EMAIL, ADMIN_PASS } from "../lib/api-url"
+import { API } from "../lib/api-url"
+import { getToken, clearAuth, redirectToLogin } from "../lib/auth-token"
 
 const REGIMES = [
   { value: "simples_nacional", label: "Simples Nacional" },
@@ -26,16 +27,14 @@ const CST_PIS_COFINS = ["01","02","04","05","06","07","08","09","49","99"]
 const UNIDADES = ["UN","KG","G","M","M2","M3","L","ML","CX","PCT","PR","DZ","TON","PAR","JG"]
 
 async function fetchAuth(path: string, options?: RequestInit) {
-  const loginRes = await fetch(`${API}/auth/user/emailpass`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASS }),
-  })
-  const { token } = await loginRes.json()
-  return fetch(`${API}${path}`, {
+  const token = getToken()
+  if (!token) { redirectToLogin(); return {} as any }
+  const res = await fetch(`${API}${path}`, {
     ...options,
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, ...options?.headers },
-  }).then((r) => r.json())
+  })
+  if (res.status === 401) { clearAuth(); redirectToLogin(); return {} as any }
+  return res.json()
 }
 
 /* ===== COMPONENTES DE CAMPO (fora do componente pai para nao perder foco) ===== */

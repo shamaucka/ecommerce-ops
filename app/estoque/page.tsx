@@ -2,19 +2,18 @@
 
 import { useState, useEffect, useCallback } from "react"
 
-import { API, ADMIN_EMAIL, ADMIN_PASS } from "../lib/api-url"
+import { API } from "../lib/api-url"
+import { getToken, clearAuth, redirectToLogin } from "../lib/auth-token"
 
 async function fetchAuth(path: string, options?: RequestInit) {
-  const loginRes = await fetch(`${API}/auth/user/emailpass`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASS }),
-  })
-  const { token } = await loginRes.json()
-  return fetch(`${API}${path}`, {
+  const token = getToken()
+  if (!token) { redirectToLogin(); return {} as any }
+  const res = await fetch(`${API}${path}`, {
     ...options,
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, ...options?.headers },
-  }).then((r) => r.json())
+  })
+  if (res.status === 401) { clearAuth(); redirectToLogin(); return {} as any }
+  return res.json()
 }
 
 export default function EstoquePage() {

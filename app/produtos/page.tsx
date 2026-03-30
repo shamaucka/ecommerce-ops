@@ -2,32 +2,22 @@
 
 import { useState, useEffect, useCallback } from "react"
 
-import { API, API_HOST, ADMIN_EMAIL, ADMIN_PASS } from "../lib/api-url"
+import { API, API_HOST } from "../lib/api-url"
+import { getToken, clearAuth, redirectToLogin } from "../lib/auth-token"
 
-/* ===== AUTH HELPER ===== */
-let _tokenCache: { token: string; ts: number } | null = null
-async function getToken() {
-  if (_tokenCache && Date.now() - _tokenCache.ts < 300_000) return _tokenCache.token
-  const res = await fetch(`${API}/auth/user/emailpass`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASS }),
-  })
-  const { token } = await res.json()
-  _tokenCache = { token, ts: Date.now() }
-  return token
-}
 async function api(path: string, options?: RequestInit) {
-  const token = await getToken()
+  const token = getToken()
+  if (!token) { redirectToLogin(); return {} as any }
   const res = await fetch(`${API}${path}`, {
     ...options,
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, ...options?.headers },
   })
+  if (res.status === 401) { clearAuth(); redirectToLogin(); return {} as any }
   return res.json()
 }
 
 async function uploadFile(file: File): Promise<string> {
-  const token = await getToken()
+  const token = getToken()
   const fd = new FormData()
   fd.append("file", file)
   const res = await fetch(`${API}/admin/uploads`, {
