@@ -1,15 +1,36 @@
 @import "tailwindcss";
 
-/* Lemon Milk — Light */
+/* ITC Avant Garde — corpo */
 @font-face {
-  font-family: 'LemonMilk';
-  src: url('/fonts/lemonmilk/LEMONMILK-Light.otf') format('opentype');
-  font-weight: 100 300;
+  font-family: 'AvantGarde';
+  src: url('/fonts/avantgarde/AvantGarde-Book.otf') format('opentype');
+  font-weight: 300 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'AvantGarde';
+  src: url('/fonts/avantgarde/AvantGarde-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'AvantGarde';
+  src: url('/fonts/avantgarde/AvantGarde-Demi.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'AvantGarde';
+  src: url('/fonts/avantgarde/AvantGarde-Bold.otf') format('opentype');
+  font-weight: 700 900;
   font-style: normal;
   font-display: swap;
 }
 
-/* Lemon Milk — Regular */
+/* Lemon Milk — headings */
 @font-face {
   font-family: 'LemonMilk';
   src: url('/fonts/lemonmilk/LEMONMILK-Regular.otf') format('opentype');
@@ -17,17 +38,6 @@
   font-style: normal;
   font-display: swap;
 }
-
-/* Lemon Milk — Medium */
-@font-face {
-  font-family: 'LemonMilk';
-  src: url('/fonts/lemonmilk/LEMONMILK-Medium.otf') format('opentype');
-  font-weight: 600;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* Lemon Milk — Bold */
 @font-face {
   font-family: 'LemonMilk';
   src: url('/fonts/lemonmilk/LEMONMILK-Bold.otf') format('opentype');
@@ -36,7 +46,10 @@
   font-display: swap;
 }
 
-/* Typography — Lemon Milk as primary font */
+/* Typography */
 * {
-  font-family: 'LemonMilk', 'Futura', 'Century Gothic', sans-serif;
+  font-family: 'AvantGarde', 'Century Gothic', 'Futura', sans-serif;
+}
+h1, h2, h3 {
+  font-family: 'LemonMilk', 'Futura', sans-serif;
 }

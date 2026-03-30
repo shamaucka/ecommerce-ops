@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR">
-      <body className="flex bg-zinc-50 text-zinc-900 min-h-screen" style={{ fontFamily: "'LemonMilk', 'Futura', 'Century Gothic', sans-serif" }}>
+      <body className="flex bg-zinc-50 text-zinc-900 min-h-screen" style={{ fontFamily: "'AvantGarde', 'Century Gothic', 'Futura', sans-serif" }}>
         <LayoutShell>{children}</LayoutShell>
       </body>
     </html>
