@@ -30,26 +30,7 @@
   font-display: swap;
 }
 
-/* Lemon Milk — headings */
-@font-face {
-  font-family: 'LemonMilk';
-  src: url('/fonts/lemonmilk/LEMONMILK-Regular.otf') format('opentype');
-  font-weight: 400 500;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'LemonMilk';
-  src: url('/fonts/lemonmilk/LEMONMILK-Bold.otf') format('opentype');
-  font-weight: 700 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* Typography */
+/* Typography — tudo Avant Garde */
 * {
   font-family: 'AvantGarde', 'Century Gothic', 'Futura', sans-serif;
-}
-h1, h2, h3 {
-  font-family: 'LemonMilk', 'Futura', sans-serif;
 }
