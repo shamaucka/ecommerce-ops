@@ -254,12 +254,8 @@ export default function FiscalLojaPage() {
                     const formData = new FormData()
                     formData.append("file", file)
                     try {
-                      const loginRes = await fetch(`${API}/auth/user/emailpass`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASS }),
-                      })
-                      const { token } = await loginRes.json()
+                      const token = getToken()
+                      if (!token) { redirectToLogin(); return }
                       const res = await fetch(`${API}/admin/uploads`, {
                         method: "POST",
                         headers: { Authorization: `Bearer ${token}` },
@@ -303,12 +299,8 @@ export default function FiscalLojaPage() {
                   type="button"
                   onClick={async () => {
                     try {
-                      const loginRes = await fetch(`${API}/auth/user/emailpass`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ email: ADMIN_EMAIL, password: ADMIN_PASS }),
-                      })
-                      const { token } = await loginRes.json()
+                      const token = getToken()
+                      if (!token) { redirectToLogin(); return }
                       const res = await fetch(`${API}/admin/nfe`, { headers: { Authorization: `Bearer ${token}` } })
                       const data = await res.json()
                       if (data.sefaz?.online) {
