@@ -18,8 +18,8 @@ async function api(path: string, options?: RequestInit) {
 
 /* ===== CONSTANTES ===== */
 const SERIE_TABS = [
-  { value: "4", label: "Saida (Serie 4)" },
-  { value: "3", label: "Entrada (Serie 3)" },
+  { value: "saida", label: "Saida (Serie 4)" },
+  { value: "entrada", label: "Entrada (Serie 3)" },
 ]
 
 const STATUS_OPTIONS = [
@@ -61,7 +61,7 @@ export default function NotasFiscaisPage() {
   const [notas, setNotas] = useState<any[]>([])
   const [stats, setStats] = useState<any>({})
   const [loading, setLoading] = useState(true)
-  const [serieTab, setSerieTab] = useState("4")
+  const [serieTab, setSerieTab] = useState("saida")
   const [statusFilter, setStatusFilter] = useState("")
   const [search, setSearch] = useState("")
   const [message, setMessage] = useState("")
@@ -92,7 +92,7 @@ export default function NotasFiscaisPage() {
   const loadNotas = useCallback(async () => {
     setLoading(true)
     try {
-      const params: any = { action: "list", serie: serieTab }
+      const params: any = { action: "list", tipo: serieTab }
       if (statusFilter) params.status = statusFilter
       if (search) params.search = search
       const query = new URLSearchParams(params).toString()
@@ -106,7 +106,7 @@ export default function NotasFiscaisPage() {
 
   const loadStats = useCallback(async () => {
     try {
-      const data = await api(`/admin/nfe-manager?action=stats&serie=${serieTab}`)
+      const data = await api(`/admin/nfe-manager?action=stats&tipo=${serieTab}`)
       setStats(data.stats || {})
     } catch (e: any) {
       console.error(e)
@@ -254,7 +254,7 @@ export default function NotasFiscaisPage() {
     try {
       await api("/admin/nfe-manager", {
         method: "POST",
-        body: JSON.stringify({ action: "emit_saida", order_id: orderId }),
+        body: JSON.stringify({ action: "emit_saida", orderId }),
       })
       showMsg("NFe de saida emitida com sucesso!")
       setShowEmitModal(false)
@@ -347,7 +347,7 @@ export default function NotasFiscaisPage() {
           <p className="text-zinc-500 text-sm mt-1">{filteredNotas.length} nota(s) fiscal(is)</p>
         </div>
         <div className="flex gap-2">
-          {serieTab === "3" ? (
+          {serieTab === "saida" ? (
             <button onClick={openEmitModal} className="px-4 py-2 bg-zinc-900 text-white rounded-lg text-sm font-medium hover:bg-zinc-800">
               Emitir NFe Saida
             </button>
@@ -443,8 +443,8 @@ export default function NotasFiscaisPage() {
                   <tr key={nfe.id} className="border-b hover:bg-zinc-50">
                     <td className="p-3 font-medium font-mono">{nfe.numero || "---"}</td>
                     <td className="p-3 text-center">{nfe.serie || serieTab}</td>
-                    <td className="p-3">{nfe.cliente_nome || nfe.destinatario?.nome || "---"}</td>
-                    <td className="p-3 text-right font-medium">{nfe.valor ? formatBRL(nfe.valor) : "---"}</td>
+                    <td className="p-3">{nfe.customer_name || "---"}</td>
+                    <td className="p-3 text-right font-medium">{nfe.valor_total ? formatBRL(nfe.valor_total) : "---"}</td>
                     <td className="p-3 text-center">
                       <span className={`px-2 py-1 rounded text-xs font-medium ${statusColor}`}>{statusLabel}</span>
                     </td>
