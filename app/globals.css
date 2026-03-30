@@ -1,15 +1,42 @@
 @import "tailwindcss";
 
-/* Maison - fonte principal do projeto */
+/* Lemon Milk — Light */
 @font-face {
-  font-family: 'Maison';
-  src: url('/fonts/maison-regular.woff') format('woff');
-  font-weight: 400;
+  font-family: 'LemonMilk';
+  src: url('/fonts/lemonmilk/LEMONMILK-Light.otf') format('opentype');
+  font-weight: 100 300;
   font-style: normal;
   font-display: swap;
 }
 
-/* Typography - Maison as primary font */
+/* Lemon Milk — Regular */
+@font-face {
+  font-family: 'LemonMilk';
+  src: url('/fonts/lemonmilk/LEMONMILK-Regular.otf') format('opentype');
+  font-weight: 400 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Lemon Milk — Medium */
+@font-face {
+  font-family: 'LemonMilk';
+  src: url('/fonts/lemonmilk/LEMONMILK-Medium.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Lemon Milk — Bold */
+@font-face {
+  font-family: 'LemonMilk';
+  src: url('/fonts/lemonmilk/LEMONMILK-Bold.otf') format('opentype');
+  font-weight: 700 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Typography — Lemon Milk as primary font */
 * {
-  font-family: 'Maison', sans-serif;
+  font-family: 'LemonMilk', 'Futura', 'Century Gothic', sans-serif;
 }
