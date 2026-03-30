@@ -214,6 +214,7 @@ export default function Sidebar() {
         <p className="text-xs text-zinc-500 mb-3">Backend Lojista</p>
         <button
           onClick={async () => {
+            sessionStorage.removeItem("admin_token")
             await fetch("/api/auth/logout", { method: "POST" })
             window.location.href = "/login"
           }}

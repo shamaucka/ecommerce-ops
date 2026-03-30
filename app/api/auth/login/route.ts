@@ -72,18 +72,10 @@ export async function POST(request: NextRequest) {
   const isProd = process.env.NODE_ENV === "production"
   const maxAge = 60 * 60 * 24 // 24 hours
 
-  const response = NextResponse.json({ ok: true })
+  // Return token in body so client can store in sessionStorage (avoids cookie read issues)
+  const response = NextResponse.json({ ok: true, token })
 
-  // admin_token: readable by JS (client components need it for API calls)
-  response.cookies.set("admin_token", token, {
-    httpOnly: false,
-    secure: isProd,
-    sameSite: "strict",
-    maxAge,
-    path: "/",
-  })
-
-  // admin_session: httpOnly, used only by middleware for route protection
+  // admin_session: httpOnly cookie used by middleware for route protection
   response.cookies.set("admin_session", "1", {
     httpOnly: true,
     secure: isProd,

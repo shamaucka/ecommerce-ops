@@ -35,6 +35,11 @@ export default function LoginPage() {
         return
       }
 
+      // Store token in sessionStorage so pages can access it immediately
+      if (data.token) {
+        sessionStorage.setItem("admin_token", data.token)
+      }
+
       router.push("/pedidos")
       router.refresh()
     } catch {
